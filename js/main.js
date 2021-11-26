@@ -1,100 +1,121 @@
-const $gameBoard = document.querySelector('.game-board');
-const cardsQuantity = 10, photosQuantity = 100, query = 'trees';
-let cards;
-
-/*https://pixabay.com/api/docs/
-busca las imagenes de pixabay para llenar las cards.
-*/
-async function start(){
-    
-
-    const response = await fetch(`https://pixabay.com/api/?key=24469039-f2a18081cb188fd1a6f5434af&q=${query}&image_type=photo&per_page=${photosQuantity}`);
-    const data = await response.json();
-    
-    cards = loadCards(data, cardsQuantity, photosQuantity);   
-    /*console.log(cards);*/
-
-    fillGameBoard($gameBoard, cards);
-    setTimeout( hideCardsAll(), 8000);
-    
-}
-start();
 
 
-/*load cards from the data*/
-function loadCards(data, cardsQuantity, photosQuantity){
-    const cards = [];
-    const randomCardsIndex = [];
+/*STARTS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
 
-    /*Loads an array of random numbers and uniques*/
+/*generates an array fill with random numbers, no repetitives from min to max (inclusives)*/
+function fillWithRandomNums(quantity, min, max){
+    const arr = [];
     let i = 0;
-    while (i < cardsQuantity) {
-        let randomNum = Math.floor(Math.random() * (photosQuantity - 1)) + 0;
-        if (!randomCardsIndex.includes(randomNum)) {
-            randomCardsIndex.push(randomNum);                
-            i++;
+    while (i<quantity){
+        let randomNum = Math.floor(Math.random() * (max - min)) + min;
+        if (!arr.includes(randomNum)){
+            arr.push(randomNum);
+            i++
         }
     }
-    /*console.log(randomCardsIndex);*/    
+    return arr;
+}
+const randomNums =  fillWithRandomNums(10, 0, 10);
+/*console.log(randomNums);*/
 
-    /*for each random number, add a card to the cards array*/
-    randomCardsIndex.forEach((elem) => {
-        /*console.log(data['hits'][elem]['previewURL']);*/
-        elem = parseFloat(elem);
-        cards.push({'id' : elem, 'imgUrl' : data['hits'][elem]['previewURL']});
-        cards.push({'id' : elem, 'imgUrl' : data['hits'][elem]['previewURL']});
+
+/*returns an array with random images from API pixabay, with a query string, a min a max index, and the quantity of images needed (https://pixabay.com/api/docs)*/
+async function fillWithImgs(query, quantity, min, max){
+    const apiKey = '24469039-f2a18081cb188fd1a6f5434af';
+    const arr = [];
+    max = (quantity <= max) ? max : quantity;
+    const randomNumsImgs = fillWithRandomNums(quantity, min, max);
+
+    const response = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${query}&image_type=photo&per_page=${max - min}`);
+    const data = await response.json();    
+
+    randomNumsImgs.forEach((elem) => {        
+        arr.push(data['hits'][elem]['previewURL'])
     });
-    /*  Cards structure
-        [{id: number,  imgUrl: string},...] */
+    return arr;
+}
+
+/*generates cards */
+function generateCards(quantity, imgsArr){    
+    /*  Cards structure : [{id: number, idCard: number, visible: boolean, paired: boolean, imgUrl: string},...] */
+    const arr = [];
+    const randomNums =  fillWithRandomNums(quantity, 0, quantity);
+    let j = 0;
+    for (let i = 0 ; i < quantity ; i++){
+        arr.push({'id': randomNums[i], 'idCard': j, 'visible': true, 'paired': false, 'imgUrl': imgsArr[j] })  
+        /*si es impar*/
+        if (i%2 !== 0) j++;      
+    }    
+    return arr;
+}
+
+/*SETUP OF THE GAME*/
+const cardsQuantity = 20;
+let cards;
+
+/*Once the async function returns the array of images*/
+fillWithImgs('car', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
+    let imagesArr;
+    imagesArr = images; 
+    /*console.log(imagesArr);*/
+    cards = generateCards(cardsQuantity, imagesArr);
     /*console.log(cards);*/
+});
 
-    return cards;
-}
+/*ENDS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
 
-/* creates a square card. Needs the url of the image ande size of the sides. returns a node of the card.
-    */
-function createCard(imgUrl, classCard, id, idOrder){      
-    const $div = document.createElement("div");    
-        $img = document.createElement("img");          
-        $img.setAttribute('src', imgUrl);    
-        $div.appendChild($img);
-        $div.classList.add(classCard);
-        $div.setAttribute('id', id);
-        $div.setAttribute('data-idorder', idOrder);    
-    return $div;
-}
-/*console.log(createCard('https://cdn.pixabay.com/photo/2016/02/26/16/32/bulldog-1224267_150.jpg', 'card', 1));*/
 
-function fillGameBoard($gameBoard, cards){    
-    
-    const randomOrder = [];
-    let i = 0;
-    while (i < cards.length ){
-        let randomNum = Math.floor(Math.random() *  parseFloat(cards.length ));
-        if (!randomOrder.includes(randomNum)) {
-            randomOrder.push(randomNum);                
-            i++;
-        }
-    }      
-    i = 0;
-    randomOrder.forEach((elem) => {
-       /* console.log(cards[elem]);*/
 
-        const $card01 = createCard(cards[elem]['imgUrl'], 'card', cards[elem]['id'], i);
-        
-        $gameBoard.appendChild($card01);             
-        i++;
-    });    
-    
-}
+
+$d = document;
+const $gameBoard = $d.querySelector('.game-board');
 
 /*once the document is fully loaded, read the id from the clicked cards*/
 document.addEventListener('DOMContentLoaded', () => {
-        /* console.log("todo cargado");  */
+    /* console.log("todo cargado");  */
+    /*loadClickedCard();*/   
+});
 
-        loadClickedCard();
-       
-    });
+
+/* creates a square card. Needs the url of the image ande size of the sides. returns a node of the card.*/    
+function createCard(imgUrl, classCard, id, idCard){      
+    const $div = document.createElement("div");    
+    $img = document.createElement("img");          
+    $img.setAttribute('src', imgUrl);    
+    $div.appendChild($img);
+    $div.classList.add(classCard);
+    $div.setAttribute('id', id);
+    $div.setAttribute('data-idcard', idCard);    
+    return $div;
+}
+
+
+/*waiting for full load*/
+let delay = 1000;
+setTimeout(() => {
+                    fillGameBoard($gameBoard, cards)
+                 }, delay);
+
+
+/*loads the gameboard with all the cards mixed*/
+function fillGameBoard($gBoard, cards){            
+    for (let i=0; i < cards.length ; i++){        
+        cards.forEach((elem) => {
+            if (elem.id == i){
+                let $card = createCard(elem['imgUrl'], 'card', elem['id'], elem['idCard']);
+                $gBoard.appendChild($card);         
+            }    
+        });
+    }    
+}
+
+
+
+/*HASTA ACA REVISE E HICE LA REFACTORIZACION DEL CODIGO */
+
+
+
+
 
 let currentCardId = '', lastCardId = '', currentCardIdOrder = '';
 
