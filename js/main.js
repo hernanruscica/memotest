@@ -52,6 +52,7 @@ function generateCards(quantity, imgsArr){
 /*SETUP OF THE GAME*/
 const cardsQuantity = 20;
 let cards;
+const imgBack = './imgs/tile.jpg';
 
 /*Once the async function returns the array of images*/
 fillWithImgs('car', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
@@ -59,7 +60,7 @@ fillWithImgs('car', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
     imagesArr = images; 
     /*console.log(imagesArr);*/
     cards = generateCards(cardsQuantity, imagesArr);
-    /*console.log(cards);*/
+    console.log(cards);
 });
 
 /*ENDS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
@@ -71,9 +72,9 @@ $d = document;
 const $gameBoard = $d.querySelector('.game-board');
 
 /*once the document is fully loaded, read the id from the clicked cards*/
-document.addEventListener('DOMContentLoaded', () => {
-    /* console.log("todo cargado");  */
-    /*loadClickedCard();*/   
+$d.addEventListener('DOMContentLoaded', () => {
+     console.log("todo cargado");  
+    loadClickedCard();
 });
 
 
@@ -111,14 +112,32 @@ function fillGameBoard($gBoard, cards){
 
 
 
-/*HASTA ACA REVISE E HICE LA REFACTORIZACION DEL CODIGO */
-
-
-
+/*currentCard = rotateCard($gameBoard, currentCard, imgBack);*/
+function rotateCard($gBoard, card, imgBack){
+    
+    if (card['visible']){
+        let $card = $d.getElementById(card['id']);
+        let $img = $card.children[0];        
+        $card.classList.add('flip-out');
+        setTimeout(() => {
+            $img.setAttribute('src', imgBack);
+            $card.classList.remove('flip-out');            
+            card['visible'] = false;
+        }, 300);
+    }else{
+        let $card = $d.getElementById(card['id']);
+        let $img = $card.children[0];        
+        $card.classList.add('flip-out');
+        setTimeout(() => {
+            $img.setAttribute('src', card['imgUrl']);
+            $card.classList.remove('flip-out');            
+            card['visible'] = true;
+        }, 300);
+    }     
+}
 
 
 let currentCardId = '', lastCardId = '', currentCardIdOrder = '';
-
 function loadClickedCard(){
     document.addEventListener('click', (e) => {
         
@@ -132,51 +151,25 @@ function loadClickedCard(){
             currentCardIdOrder = e.target.parentElement.dataset.idorder;
         }
         console.clear();             
-        (currentCardId !== '') ? console.log(`Current Card: ${currentCardId}\nLast Card: ${lastCardId}\nCurrent Card Order: ${currentCardIdOrder}`) : console.log('click outside a card');              
+        (currentCardId !== '') ? console.log(`Current Card: ${currentCardId}\nLast Card: ${lastCardId}`) : console.log('click outside a card');              
         
-        /*hideCard(currentCardId, currentCardIdOrder);*/
+        let currentCard = [];
+        currentCard = cards.filter(elem => elem.id === parseFloat(currentCardId))[0];
         
         
-        showCard(currentCardId, currentCardIdOrder)
+        /*rotateCard($gameBoard, currentCard['id'], currentCard['imgUrl'], imgBack, currentCard['visible']);*/
+        currentCard = rotateCard($gameBoard, currentCard, imgBack);
     })
 }
+
+
+
 
 function resetSelectedCards(){
     currentCardId = '', lastCardId = '';
 }
 
-function hideCard(cardId, cardIdOrder){
-    /*found the selected card*/
-    const $cards = document.querySelectorAll('.card');
-    const $card = $cards[cardIdOrder];
 
-    /*turn the card to disapear */
-    $card.classList.add('flip-out');    
-    setTimeout(() => {$card.children[0].setAttribute('src', './imgs/tile.jpg')}, 200);
-    setTimeout(() => {$card.classList.add('flip-in')}, 200);        
-}
+/*HASTA ACA REVISE E HICE LA REFACTORIZACION DEL CODIGO */
 
-function hideCardsAll(){
-    /*found the selected card*/
-    const $cards = document.querySelectorAll('.card');
-    $cards.forEach((elem) => {
-        /*turn the card to disapear */
-        elem.classList.add('flip-out');    
-        setTimeout(() => {elem.children[0].setAttribute('src', './imgs/tile.jpg')}, 200);
-        setTimeout(() => {elem.classList.add('flip-in');}, 200);
-    })    
-}
-
-function showCard(cardId, cardIdOrder){
-    
-    const $cards = document.querySelectorAll('.card');
-    const $card = $cards[cardIdOrder];
-    const imgURL = cards[cardIdOrder]['imgUrl'];
-    /*turn the card to disapear */
-    $card.classList.remove('flip-in'); 
-    setTimeout(() => {$card.children[0].setAttribute('src', `${imgURL}`)}, 200);
-    setTimeout(() => {$card.classList.remove('flip-out')}, 200);        
-
-    console.log(`show card ${cardIdOrder} ${imgURL}`);
-}
 
