@@ -27,6 +27,8 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
+    transition: 0.2s ease-out;
 }
 
 .card-cover {
@@ -37,7 +39,15 @@ body{
     width: auto;
     height: 150px;
 }
-.card:nth-child(1) {
-    border: solid red 1px;    
+.flip-out {     
+    transform: scaleX(0);
+    transition: 0.2s ease-out;
+}
+.flip-in {     
+    transform: scaleX(-1);
+    transition: 0.2s ease-out;
 }
 
+.back {
+    background-color: #333;
+}
