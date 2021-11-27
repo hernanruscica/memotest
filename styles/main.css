@@ -51,3 +51,26 @@ body{
 .back {
     background-color: #333;
 }
+
+.protectFromClicks{
+    position:fixed;
+    top: 15vh;
+    left: 0px;
+    width: 100vw;
+    height: 100vw;
+    z-index: 10;
+    opacity: 0.5;
+    background-color: aquamarine;
+    cursor:default;
+}
+
+.header{
+    display: flex;
+    flex-direction: column;
+}
+
+.header-stats{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}

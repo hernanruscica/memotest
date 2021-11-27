@@ -1,4 +1,16 @@
 
+/*******************************SETUP OF THE GAME**************************************************************/
+const cardsQuantity = 20;
+let cards;
+const imgBack = './imgs/tile.jpg';
+$d = document;
+const $gameBoard = $d.querySelector('.game-board');
+
+const states = ['intro', 'showCards', 'play', 'gameOver', 'youWin' ];
+let stateIndex = 0;
+let lifes = 3, points = 0;
+/*******************************SETUP OF THE GAME**************************************************************/
+
 
 /*STARTS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
 
@@ -49,34 +61,139 @@ function generateCards(quantity, imgsArr){
     return arr;
 }
 
-/*SETUP OF THE GAME*/
-const cardsQuantity = 20;
-let cards;
-const imgBack = './imgs/tile.jpg';
-
 /*Once the async function returns the array of images*/
-fillWithImgs('car', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
+fillWithImgs('cat', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
     let imagesArr;
     imagesArr = images; 
     /*console.log(imagesArr);*/
     cards = generateCards(cardsQuantity, imagesArr);
-    console.log(cards);
+    /*console.log(cards);*/
 });
+
+function changeVisibilityAll(cards, value){
+    cards.forEach((elem) => {
+        elem['visible'] = value;
+    });
+}
 
 /*ENDS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
 
+function updateState(i){
+    
+    switch (i){
+        case 0:         
+            /* INTRO */    
+            console.clear();
+            console.log(`current state: ${states[stateIndex]}`);
+            setTimeout(() => {
+                stateIndex++;
+                updateState(stateIndex);
+            }, 2000)
+        break;
+        case 1:
+            /* SHOWCARDS */
+            let timeShowing = 4000;
+            console.clear();
+            console.log(`current state: ${states[stateIndex]}`);
+            fillGameBoard($gameBoard, cards, imgBack);
+            /*duration of this state, until its changes to the next*/
+            setTimeout(() => {
+                changeVisibilityAll(cards, false);
+                fillGameBoard($gameBoard, cards, imgBack);
+                stateIndex++;
+                updateState(stateIndex);
+            }, timeShowing);            
+            
+        break;
+        case 2:
+            /* PLAY */            
+            console.clear();
+            console.log(`current state: ${states[stateIndex]}`);
+            let currentCardId = '', lastCardId = '';
+            let clicksCounter = 0;
+            let currentCard, lastCard;
+            const showStats = () => {
+                console.clear();
+                console.log(`Current idCard: ${currentCard['idCard']}\nLast cardId: ${lastCard['idCard']}
+                            \nClicks Counter: ${clicksCounter}\nLifes: ${lifes}\n Score: ${points}`);  
+            }
+
+            $d.addEventListener('click', (e) => {
+                
+                const getCurrentCard = (id) => {return cards.filter(elem => elem.id === parseFloat(id))[0];};
+                
+                /*Only if the event was on the card element */
+                if (e.target.parentElement.classList.contains('card')){
+                    clicksCounter++;
+                    lastCardId = (currentCardId !== '') ? currentCardId : e.target.parentElement.id;
+                    currentCardId = e.target.parentElement.id;   
+                    
+                    currentCard = getCurrentCard(currentCardId);  
+                    lastCard = getCurrentCard(lastCardId);    
+                    /*if the clicked cards is not visible then rotate */
+                    currentCard = (currentCard['visible'] == false) ? rotateCard($gameBoard, currentCard, imgBack) : currentCard;     
+                    showStats();     
+                
+                
+                    if (clicksCounter > 0 && clicksCounter%2 == 0 && currentCardId !== '' && currentCardId !== lastCardId){
+                        /*si el contador de clicks es par y mayor a cero*/
+                        if(currentCard['idCard'] == lastCard['idCard'] && currentCard['id'] !== lastCard['id']){
+                            console.log('Sumaste 1 punto');
+                            points++;
+                            if (points * 2 == cardsQuantity){
+                                /*you completed the boards*/                                
+                                stateIndex = 4;
+                                updateState(stateIndex);
+                            }else{
+                                showStats();
+                            }
+                        }else{
+                            console.log('Perdiste una vida');
+                            $d.getElementById('protection').classList.add('protectFromClicks');
+                            currentCardId = '', lastCardId = '';
+                            lifes--;
+                            if (lifes > 0){
+                                /*keep playing */
+                                showStats();
+                                setTimeout(() => {                                            
+                                    currentCard = rotateCard($gameBoard, currentCard, imgBack);
+                                    lastCard = rotateCard($gameBoard, lastCard, imgBack);
+                                    $d.getElementById('protection').classList.remove('protectFromClicks');
+                                }, 1000);
+                            }else{
+                                /* you lose */
+                                stateIndex++;
+                                updateState(stateIndex);
+                            }
+                        }
+                    }
+                }
+            });
+        break;
+        case 3:
+            /* GAME OVER */
+            console.clear();
+            console.log(`current state: ${states[stateIndex]}`);            
+            console.log(`GAME OVER!\nYour score : ${points}`)
+        break;
+        case 4:
+            /* YOU WIN */
+            console.clear();
+            console.log(`current state: ${states[stateIndex]}`);            
+            console.log(`YOU WIN!\nYour score : ${points}`)
+        break;
+    }
+}
 
 
-
-$d = document;
-const $gameBoard = $d.querySelector('.game-board');
-
-/*once the document is fully loaded, read the id from the clicked cards*/
+/*once the document is fully loaded, Do something*/
 $d.addEventListener('DOMContentLoaded', () => {
-     console.log("todo cargado");  
-    loadClickedCard();
+     console.log('fully loaded');      
+     updateState(stateIndex);    
 });
 
+
+/*STARTS THE PRESENTATION OF THE GAME*/
 
 /* creates a square card. Needs the url of the image ande size of the sides. returns a node of the card.*/    
 function createCard(imgUrl, classCard, id, idCard){      
@@ -88,33 +205,24 @@ function createCard(imgUrl, classCard, id, idCard){
     $div.setAttribute('id', id);
     $div.setAttribute('data-idcard', idCard);    
     return $div;
-}
-
-
-/*waiting for full load*/
-let delay = 1000;
-setTimeout(() => {
-                    fillGameBoard($gameBoard, cards)
-                 }, delay);
+}                
 
 
 /*loads the gameboard with all the cards mixed*/
-function fillGameBoard($gBoard, cards){            
+function fillGameBoard($gBoard, cards, imgBack){ 
+    $gBoard.innerHTML = '';
     for (let i=0; i < cards.length ; i++){        
         cards.forEach((elem) => {
+            let img = (elem['visible'] == true) ? elem['imgUrl'] : imgBack;
             if (elem.id == i){
-                let $card = createCard(elem['imgUrl'], 'card', elem['id'], elem['idCard']);
-                $gBoard.appendChild($card);         
+                let $card = createCard(img, 'card', elem['id'], elem['idCard']);
+                $gBoard.appendChild($card);                     
             }    
         });
     }    
 }
 
-
-
-/*currentCard = rotateCard($gameBoard, currentCard, imgBack);*/
-function rotateCard($gBoard, card, imgBack){
-    
+function rotateCard($gBoard, card, imgBack){    
     if (card['visible']){
         let $card = $d.getElementById(card['id']);
         let $img = $card.children[0];        
@@ -133,43 +241,10 @@ function rotateCard($gBoard, card, imgBack){
             $card.classList.remove('flip-out');            
             card['visible'] = true;
         }, 300);
-    }     
+    }
+    return card;    
 }
 
-
-let currentCardId = '', lastCardId = '', currentCardIdOrder = '';
-function loadClickedCard(){
-    document.addEventListener('click', (e) => {
-        
-        if ( e.target.classList.contains('card')) {
-            lastCardId = currentCardId;
-            currentCardId = e.target.id;     
-            currentCardIdOrder = e.target.dataset.idorder;
-        }else {
-            lastCardId = currentCardId;
-            currentCardId = e.target.parentElement.id;
-            currentCardIdOrder = e.target.parentElement.dataset.idorder;
-        }
-        console.clear();             
-        (currentCardId !== '') ? console.log(`Current Card: ${currentCardId}\nLast Card: ${lastCardId}`) : console.log('click outside a card');              
-        
-        let currentCard = [];
-        currentCard = cards.filter(elem => elem.id === parseFloat(currentCardId))[0];
-        
-        
-        /*rotateCard($gameBoard, currentCard['id'], currentCard['imgUrl'], imgBack, currentCard['visible']);*/
-        currentCard = rotateCard($gameBoard, currentCard, imgBack);
-    })
-}
-
-
-
-
-function resetSelectedCards(){
-    currentCardId = '', lastCardId = '';
-}
-
-
-/*HASTA ACA REVISE E HICE LA REFACTORIZACION DEL CODIGO */
+/*ENDS THE PRESENTATION OF THE GAME*/
 
 
