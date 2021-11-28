@@ -1,6 +1,11 @@
-body{
+*{
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
+}
+body{    
     font-family: sans-serif;
+    background-color: #EED7CE;
 }
 .app{
     height: 100%;
@@ -9,18 +14,25 @@ body{
     flex-direction: column;
 }
 .header{
-    height: 15vh;
-    border: solid thin gray;
+    height: 80px;
+    background-color: #FFC4E1;
+    color: #ca5997;
+    padding: 1rem;
 }
 .game-board{
-    height: 85vh;
-    background-color: #333;
+    margin: 0.5rem auto;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr ;
+    grid-template-columns: 1fr 1fr 1fr 1fr ;
 }
 .card{
-    background-color: rgb(238, 188, 240);
-    border: thin solid grey;
+    background-color: #FFC4E1;
+    border: 2px solid #582f46;
+    border-radius: 20px;
+    margin: 0.5rem;
+    box-shadow: 5px 5px 5px #525252;
     width: 150px;
     height: 150px;
     overflow: hidden;
@@ -31,10 +43,6 @@ body{
     transition: 0.2s ease-out;
 }
 
-.card-cover {
-    opacity: 0;
-}
-
 .card img{
     width: auto;
     height: 150px;
@@ -43,14 +51,7 @@ body{
     transform: scaleX(0);
     transition: 0.2s ease-out;
 }
-.flip-in {     
-    transform: scaleX(-1);
-    transition: 0.2s ease-out;
-}
 
-.back {
-    background-color: #333;
-}
 
 .protectFromClicks{
     position:fixed;
