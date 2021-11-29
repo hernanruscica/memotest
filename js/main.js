@@ -5,6 +5,7 @@ let cards;
 const imgBack = './imgs/tile.jpg';
 $d = document;
 const $gameBoard = $d.querySelector('.game-board');
+const $gameStats = $d.querySelector('.header-stats');
 
 const states = ['intro', 'showCards', 'play', 'gameOver', 'youWin' ];
 let stateIndex = 0;
@@ -88,7 +89,7 @@ function updateState(i){
             setTimeout(() => {
                 stateIndex++;
                 updateState(stateIndex);
-            }, 2000)
+            }, 1000)
         break;
         case 1:
             /* SHOWCARDS */
@@ -112,12 +113,12 @@ function updateState(i){
             let currentCardId = '', lastCardId = '';
             let clicksCounter = 0;
             let currentCard, lastCard;
-            const showStats = () => {
+            /*const showStats = () => {
                 console.clear();
                 console.log(`Current idCard: ${currentCard['idCard']}\nLast cardId: ${lastCard['idCard']}
                             \nClicks Counter: ${clicksCounter}\nLifes: ${lifes}\n Score: ${points}`);  
-            }
-
+            }*/
+            startClock();
             $d.addEventListener('click', (e) => {
                 
                 const getCurrentCard = (id) => {return cards.filter(elem => elem.id === parseFloat(id))[0];};
@@ -132,7 +133,7 @@ function updateState(i){
                     lastCard = getCurrentCard(lastCardId);    
                     /*if the clicked cards is not visible then rotate */
                     currentCard = (currentCard['visible'] == false) ? rotateCard($gameBoard, currentCard, imgBack) : currentCard;     
-                    showStats();     
+                         
                 
                 
                     if (clicksCounter > 0 && clicksCounter%2 == 0 && currentCardId !== '' && currentCardId !== lastCardId){
@@ -145,7 +146,7 @@ function updateState(i){
                                 stateIndex = 4;
                                 updateState(stateIndex);
                             }else{
-                                showStats();
+                                /*showStats($gameStats, points, lifes, '00:01:33');*/
                             }
                         }else{
                             console.log('Perdiste una vida');
@@ -154,7 +155,7 @@ function updateState(i){
                             lifes--;
                             if (lifes > 0){
                                 /*keep playing */
-                                showStats();
+                                /*showStats($gameStats, points, lifes, '00:01:33');*/
                                 setTimeout(() => {                                            
                                     currentCard = rotateCard($gameBoard, currentCard, imgBack);
                                     lastCard = rotateCard($gameBoard, lastCard, imgBack);
@@ -172,12 +173,14 @@ function updateState(i){
         break;
         case 3:
             /* GAME OVER */
+            
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);            
             console.log(`GAME OVER!\nYour score : ${points}`)
         break;
         case 4:
             /* YOU WIN */
+            
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);            
             console.log(`YOU WIN!\nYour score : ${points}`)
@@ -189,7 +192,7 @@ function updateState(i){
 /*once the document is fully loaded, Do something*/
 $d.addEventListener('DOMContentLoaded', () => {
      console.log('fully loaded');      
-     updateState(stateIndex);    
+     /**/updateState(stateIndex);    
 });
 
 
@@ -243,6 +246,48 @@ function rotateCard($gBoard, card, imgBack){
         }, 300);
     }
     return card;    
+}
+
+function showStats($gStats, score, lifes, time){
+    const $h3Score = document.createElement("h3");
+    const $h3Lifes = document.createElement("h3");
+    const $h3Time = document.createElement("h3");
+
+    $gStats.innerHTML = '';
+    
+    
+    $h3Lifes.innerText = `Lifes: ${lifes}`;
+    $gStats.appendChild($h3Lifes);
+    $h3Score.innerText = `Score: ${score}`;
+    $gStats.appendChild($h3Score);
+    $h3Time.innerText = `Time: ${time}`;
+    $gStats.appendChild($h3Time);              
+}
+
+/*deberia usar esto clearInterval(clockTempo); */
+function startClock(){
+    let cont = 0;
+    let TimeFraction = 100, seconds = 0, minutes = 0, time = '';
+    setInterval(() => {
+        cont++;
+        seconds = cont/(1000/TimeFraction);    
+        minutes = Math.trunc(seconds / 60);
+        
+        seconds = (seconds%60).toFixed(2).toString();
+        if (seconds.includes('.') === false){
+            seconds = seconds + '.0';
+        }
+        if (seconds.indexOf('.') === 1){
+            seconds = '0' + seconds;
+        }    
+        minutes = minutes.toString();
+        if (minutes.length === 1){
+            minutes = '0' + minutes;
+        }
+        time = `${minutes}:${seconds}`;
+
+        showStats($gameStats, points, lifes, time);    
+    }, TimeFraction); 
 }
 
 /*ENDS THE PRESENTATION OF THE GAME*/
