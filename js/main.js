@@ -6,10 +6,10 @@ const imgBack = './imgs/tile.jpg';
 $d = document;
 const $gameBoard = $d.querySelector('.game-board');
 const $gameStats = $d.querySelector('.header-stats');
-
+const $messagesModal = $d.querySelector('#messages');
 const states = ['intro', 'showCards', 'play', 'gameOver', 'youWin' ];
 let stateIndex = 0;
-let lifes = 3, points = 0;
+let lifes = 10, points = 0;
 /*******************************SETUP OF THE GAME**************************************************************/
 
 
@@ -84,12 +84,14 @@ function updateState(i){
     switch (i){
         case 0:         
             /* INTRO */    
+            showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares');
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);
             setTimeout(() => {
+                showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares');
                 stateIndex++;
                 updateState(stateIndex);
-            }, 1000)
+            }, 2000);            
         break;
         case 1:
             /* SHOWCARDS */
@@ -97,27 +99,25 @@ function updateState(i){
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);
             fillGameBoard($gameBoard, cards, imgBack);
+            
             /*duration of this state, until its changes to the next*/
             setTimeout(() => {
                 changeVisibilityAll(cards, false);
                 fillGameBoard($gameBoard, cards, imgBack);
                 stateIndex++;
                 updateState(stateIndex);
-            }, timeShowing);            
+            }, timeShowing);                       
             
         break;
         case 2:
             /* PLAY */            
+            
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);
             let currentCardId = '', lastCardId = '';
             let clicksCounter = 0;
             let currentCard, lastCard;
-            /*const showStats = () => {
-                console.clear();
-                console.log(`Current idCard: ${currentCard['idCard']}\nLast cardId: ${lastCard['idCard']}
-                            \nClicks Counter: ${clicksCounter}\nLifes: ${lifes}\n Score: ${points}`);  
-            }*/
+          
             startClock();
             $d.addEventListener('click', (e) => {
                 
@@ -133,8 +133,6 @@ function updateState(i){
                     lastCard = getCurrentCard(lastCardId);    
                     /*if the clicked cards is not visible then rotate */
                     currentCard = (currentCard['visible'] == false) ? rotateCard($gameBoard, currentCard, imgBack) : currentCard;     
-                         
-                
                 
                     if (clicksCounter > 0 && clicksCounter%2 == 0 && currentCardId !== '' && currentCardId !== lastCardId){
                         /*si el contador de clicks es par y mayor a cero*/
@@ -162,7 +160,7 @@ function updateState(i){
                                     $d.getElementById('protection').classList.remove('protectFromClicks');
                                 }, 1000);
                             }else{
-                                /* you lose */
+                                /* you lose */                                
                                 stateIndex++;
                                 updateState(stateIndex);
                             }
@@ -173,14 +171,14 @@ function updateState(i){
         break;
         case 3:
             /* GAME OVER */
-            
+            showHideMessages($messagesModal, 'Game Over !', 'Perdiste todos los intentos.');
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);            
             console.log(`GAME OVER!\nYour score : ${points}`)
         break;
         case 4:
             /* YOU WIN */
-            
+            showHideMessages($messagesModal, 'Ganaste !', 'Completaste el tablero.');
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);            
             console.log(`YOU WIN!\nYour score : ${points}`)
@@ -262,6 +260,29 @@ function showStats($gStats, score, lifes, time){
     $gStats.appendChild($h3Score);
     $h3Time.innerText = `Time: ${time}`;
     $gStats.appendChild($h3Time);              
+}
+
+/*showMessages($messagesModal, points, lifes, time);*/
+function showHideMessages($modal, title, message){
+    
+    const $title = $modal.querySelector('.modal-title');
+    const $message = $modal.querySelector('.modal-paragraph');
+    const $button = $modal.querySelector('.modal-btn');
+   
+    $title.innerHTML = '';
+    $title.innerHTML = `${title}`
+    $message.innerHTML = '';
+    $message.innerHTML = `${message}`
+    $button.innerHTML = '';
+    $button.innerHTML = 'Volver a intentar!';
+    
+    if ($modal.classList.contains('hide')){
+        $modal.classList.remove('hide');
+        $modal.classList.add('show');
+    }else if ($modal.classList.contains('show')){
+        $modal.classList.remove('show');
+        $modal.classList.add('hide');
+    }
 }
 
 /*deberia usar esto clearInterval(clockTempo); */
