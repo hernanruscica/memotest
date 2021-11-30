@@ -9,7 +9,7 @@ const $gameStats = $d.querySelector('.header-stats');
 const $messagesModal = $d.querySelector('#messages');
 const states = ['intro', 'showCards', 'play', 'gameOver', 'youWin' ];
 let stateIndex = 0;
-let lifes = 10, points = 0;
+let lifes = 1, points = 0;
 /*******************************SETUP OF THE GAME**************************************************************/
 
 
@@ -61,15 +61,16 @@ function generateCards(quantity, imgsArr){
     }    
     return arr;
 }
+/*
+function restartGame(){
+    console.log('restarting the game');
+    lifes = 3; points = 0;
+    stateIndex = 0;
+    updateState(stateIndex);    
+    $d.getElementById('protection').classList.remove('protectFromClicks');
+}
 
-/*Once the async function returns the array of images*/
-fillWithImgs('cat', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
-    let imagesArr;
-    imagesArr = images; 
-    /*console.log(imagesArr);*/
-    cards = generateCards(cardsQuantity, imagesArr);
-    /*console.log(cards);*/
-});
+*/
 
 function changeVisibilityAll(cards, value){
     cards.forEach((elem) => {
@@ -83,15 +84,26 @@ function updateState(i){
     
     switch (i){
         case 0:         
-            /* INTRO */    
+            /* INTRO */                
             showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);
+            $gameBoard.innerHTML = '';
+            console.log('restarting the game');
+            lifes = 3; points = 0, stateIndex = 0;
+            /*Once the async function returns the array of images*/
+            fillWithImgs('cat', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
+                let imagesArr;
+                imagesArr = images; 
+                /*console.log(imagesArr);*/
+                cards = generateCards(cardsQuantity, imagesArr);
+                changeVisibilityAll(cards, true); 
+                console.clear();
+                console.log(`current state: ${states[stateIndex]}`);
+            }); 
             setTimeout(() => {
                 showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
                 stateIndex++;
                 updateState(stateIndex);
-            }, 2000);            
+            }, 3000);            
         break;
         case 1:
             /* SHOWCARDS */
@@ -194,12 +206,7 @@ $d.addEventListener('DOMContentLoaded', () => {
      /**/updateState(stateIndex);    
 });
 
-/*
-function resetGame(){
-    stateIndex = 0;
-    updateState(stateIndex);
-}
-*/
+
 /*STARTS THE PRESENTATION OF THE GAME*/
 
 /* creates a square card. Needs the url of the image ande size of the sides. returns a node of the card.*/    
@@ -264,8 +271,9 @@ function showStats($gStats, score, lifes, time){
     $gStats.appendChild($h3Lifes);
     $h3Score.innerText = `Score: ${score}`;
     $gStats.appendChild($h3Score);
+    /*
     $h3Time.innerText = `Time: ${time}`;
-    $gStats.appendChild($h3Time);              
+    $gStats.appendChild($h3Time);        */      
 }
 
 /*showMessages($messagesModal, points, lifes, time);*/
@@ -281,10 +289,17 @@ function showHideMessages($modal, title, message, wButton){
     $message.innerHTML = '';
     $message.innerHTML = `${message}`  
 
-    if (wButton){
+    if (wButton && !$modal.querySelector('button')  ){
         const $button = $d.createElement('button');
         $button.classList.add('modal-btn');
         $button.innerHTML = 'Volver a intentar!';
+        $button.addEventListener('click', (e) => {
+            $modal.classList.remove('show');
+            $modal.classList.add('hide');
+            $d.getElementById('protection').classList.remove('protectFromClicks');
+            stateIndex = 0;
+            updateState(stateIndex);
+        });
         $modal.appendChild($button);
     }
     
