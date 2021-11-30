@@ -84,11 +84,11 @@ function updateState(i){
     switch (i){
         case 0:         
             /* INTRO */    
-            showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares');
+            showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);
             setTimeout(() => {
-                showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares');
+                showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
                 stateIndex++;
                 updateState(stateIndex);
             }, 2000);            
@@ -136,15 +136,13 @@ function updateState(i){
                 
                     if (clicksCounter > 0 && clicksCounter%2 == 0 && currentCardId !== '' && currentCardId !== lastCardId){
                         /*si el contador de clicks es par y mayor a cero*/
-                        if(currentCard['idCard'] == lastCard['idCard'] && currentCard['id'] !== lastCard['id']){
-                            console.log('Sumaste 1 punto');
+                        if(currentCard['idCard'] == lastCard['idCard'] && currentCard['id'] !== lastCard['id'] ){
+                            console.log('Sumaste 1 punto');                            
                             points++;
                             if (points * 2 == cardsQuantity){
                                 /*you completed the boards*/                                
                                 stateIndex = 4;
                                 updateState(stateIndex);
-                            }else{
-                                /*showStats($gameStats, points, lifes, '00:01:33');*/
                             }
                         }else{
                             console.log('Perdiste una vida');
@@ -153,7 +151,7 @@ function updateState(i){
                             lifes--;
                             if (lifes > 0){
                                 /*keep playing */
-                                /*showStats($gameStats, points, lifes, '00:01:33');*/
+                                
                                 setTimeout(() => {                                            
                                     currentCard = rotateCard($gameBoard, currentCard, imgBack);
                                     lastCard = rotateCard($gameBoard, lastCard, imgBack);
@@ -163,22 +161,25 @@ function updateState(i){
                                 /* you lose */                                
                                 stateIndex++;
                                 updateState(stateIndex);
+                                
                             }
                         }
                     }
                 }
             });
+            /*PROBLEMA --- gano puntos clickeando en los mismos pares ya dados vuelta */
+
         break;
         case 3:
             /* GAME OVER */
-            showHideMessages($messagesModal, 'Game Over !', 'Perdiste todos los intentos.');
+            showHideMessages($messagesModal, 'Game Over !', 'Perdiste todos los intentos.', true);
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);            
             console.log(`GAME OVER!\nYour score : ${points}`)
         break;
         case 4:
             /* YOU WIN */
-            showHideMessages($messagesModal, 'Ganaste !', 'Completaste el tablero.');
+            showHideMessages($messagesModal, 'Ganaste !', 'Completaste el tablero.', true);
             console.clear();
             console.log(`current state: ${states[stateIndex]}`);            
             console.log(`YOU WIN!\nYour score : ${points}`)
@@ -193,7 +194,12 @@ $d.addEventListener('DOMContentLoaded', () => {
      /**/updateState(stateIndex);    
 });
 
-
+/*
+function resetGame(){
+    stateIndex = 0;
+    updateState(stateIndex);
+}
+*/
 /*STARTS THE PRESENTATION OF THE GAME*/
 
 /* creates a square card. Needs the url of the image ande size of the sides. returns a node of the card.*/    
@@ -263,18 +269,24 @@ function showStats($gStats, score, lifes, time){
 }
 
 /*showMessages($messagesModal, points, lifes, time);*/
-function showHideMessages($modal, title, message){
-    
+function showHideMessages($modal, title, message, wButton){
+  
+
     const $title = $modal.querySelector('.modal-title');
     const $message = $modal.querySelector('.modal-paragraph');
-    const $button = $modal.querySelector('.modal-btn');
+    
    
     $title.innerHTML = '';
     $title.innerHTML = `${title}`
     $message.innerHTML = '';
-    $message.innerHTML = `${message}`
-    $button.innerHTML = '';
-    $button.innerHTML = 'Volver a intentar!';
+    $message.innerHTML = `${message}`  
+
+    if (wButton){
+        const $button = $d.createElement('button');
+        $button.classList.add('modal-btn');
+        $button.innerHTML = 'Volver a intentar!';
+        $modal.appendChild($button);
+    }
     
     if ($modal.classList.contains('hide')){
         $modal.classList.remove('hide');
