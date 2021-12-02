@@ -56,15 +56,18 @@ body{
     overflow: hidden;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center;    
+    transition: 0.2s ease-out;
+}
+.clickeable{
     cursor: pointer;
     transition: 0.2s ease-out;
 }
-.card:hover {
-    /*border: solid #582f46 4px;*/
+.clickeable:hover {        
     box-shadow: 10px 10px 12px #525252;
 }
-.card img{
+
+.cardImg{
     width: auto;
     height: 80px;
 }

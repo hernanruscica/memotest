@@ -1,19 +1,29 @@
 
 /*******************************SETUP OF THE GAME**************************************************************/
-const cardsQuantity = 20;
-let cards;
+const cardsQuantity = 20, maxLifes = 3, defaultQuery = 'cats';
+let lifes, score, query;
 const imgBack = './imgs/tile.jpg';
-$d = document;
-const $gameBoard = $d.querySelector('.game-board');
-const $gameStats = $d.querySelector('.header-stats');
-const $messagesModal = $d.querySelector('#messages');
-const states = ['intro', 'showCards', 'play', 'gameOver', 'youWin' ];
-let stateIndex = 0;
-let lifes = 1, points = 0;
+let imagesArr;
 /*******************************SETUP OF THE GAME**************************************************************/
 
 
-/*STARTS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
+/*******************************HTML ELEMENTS**************************************************************/
+const $d = document;
+const $gameBoard = $d.querySelector('.game-board');
+let $cards = ''; /*defined in fillGameBoard() */
+const $gameStats = $d.querySelector('.header-stats');
+const $messagesModal = $d.querySelector('.modal');
+
+/*******************************HTML ELEMENTS**************************************************************/
+
+
+/*once the document is fully loaded, Do something*/
+$d.addEventListener('DOMContentLoaded', () => {
+    console.log('fully loaded');      
+    /*console.log($gameBoard, $gameStats, $messagesModal); */
+    resetGame()
+});
+
 
 /*generates an array fill with random numbers, no repetitives from min to max (inclusives)*/
 function fillWithRandomNums(quantity, min, max){
@@ -28,9 +38,6 @@ function fillWithRandomNums(quantity, min, max){
     }
     return arr;
 }
-const randomNums =  fillWithRandomNums(10, 0, 10);
-/*console.log(randomNums);*/
-
 
 /*returns an array with random images from API pixabay, with a query string, a min a max index, and the quantity of images needed (https://pixabay.com/api/docs)*/
 async function fillWithImgs(query, quantity, min, max){
@@ -48,38 +55,53 @@ async function fillWithImgs(query, quantity, min, max){
     return arr;
 }
 
-/*generates cards */
-function generateCards(quantity, imgsArr){    
-    /*  Cards structure : [{id: number, idCard: number, visible: boolean, paired: boolean, imgUrl: string},...] */
-    const arr = [];
-    const randomNums =  fillWithRandomNums(quantity, 0, quantity);
-    let j = 0;
-    for (let i = 0 ; i < quantity ; i++){
-        arr.push({'id': randomNums[i], 'idCard': j, 'visible': true, 'paired': false, 'imgUrl': imgsArr[j] })  
-        /*si es impar*/
-        if (i%2 !== 0) j++;      
-    }    
-    return arr;
-}
-/*
-function restartGame(){
-    console.log('restarting the game');
-    lifes = 3; points = 0;
-    stateIndex = 0;
-    updateState(stateIndex);    
-    $d.getElementById('protection').classList.remove('protectFromClicks');
+function resetGame(){
+    /*reset this globals variables */
+    lifes = maxLifes, score = 0, query = defaultQuery;
+    /*Once the async function returns the array of images*/
+    fillWithImgs(query, cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
+        
+        imagesArr = images; 
+        /*console.log(imagesArr);*/              
+        fillGameBoard($gameBoard, cardsQuantity, imagesArr, imgBack);
+        $cards = $d.getElementsByClassName('card');
+        gamePlay();
+    }); 
 }
 
-*/
+function gamePlay(){
+    showStats($gameStats, score, lifes, '00:01:12')
+    let currentCardId = '', lastCardId = '', currentCardIdPair = '', lastCardIdPair = '';    
+    let clicksCounter = 0;
+    
+    $d.addEventListener('click', (e) => {   
+        if (e.target.classList.contains('cardImg')){            
+            /*console.log(e.target.parentElement.id);*/
+            lastCardId = (currentCardId !== '') ? currentCardId : e.target.parentElement.id;
+            currentCardId = e.target.parentElement.id;
+            lastCardIdPair = (currentCardIdPair !== '') ? currentCardIdPair : e.target.parentElement.dataset.idpair;
+            currentCardIdPair = e.target.parentElement.dataset.idpair;
+            
+            console.clear();      
 
-function changeVisibilityAll(cards, value){
-    cards.forEach((elem) => {
-        elem['visible'] = value;
-    });
+            if (lastCardId !== '' && clicksCounter%2 !== 0){
+                if (currentCardId !== lastCardId && currentCardIdPair === lastCardIdPair){
+                    console.log('sumaste 1 punto!');
+                }else{
+                    console.log('perdiste 1 vida!');
+                }
+            }
+
+            rotateCard($gameBoard, currentCardId, currentCardIdPair);
+            clicksCounter++;
+            
+        }
+        
+        console.log(`Last Card Id: ${lastCardId} - Last Card Id Pair: ${lastCardIdPair}
+                    \nCurrent Card Id: ${currentCardId} - Current Card Id Pair: ${currentCardIdPair}\n`);      
+    });    
+    
 }
-
-/*ENDS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
-
 function updateState(i){
     
     switch (i){
@@ -88,7 +110,7 @@ function updateState(i){
             showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
             $gameBoard.innerHTML = '';
             console.log('restarting the game');
-            lifes = 3; points = 0, stateIndex = 0;
+            lifes = 3; score = 0, stateIndex = 0;
             /*Once the async function returns the array of images*/
             fillWithImgs('cat', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
                 let imagesArr;
@@ -150,7 +172,7 @@ function updateState(i){
                         /*si el contador de clicks es par y mayor a cero*/
                         if(currentCard['idCard'] == lastCard['idCard'] && currentCard['id'] !== lastCard['id'] ){
                             console.log('Sumaste 1 punto');                            
-                            points++;
+                            score++;
                             if (points * 2 == cardsQuantity){
                                 /*you completed the boards*/                                
                                 stateIndex = 4;
@@ -200,95 +222,91 @@ function updateState(i){
 }
 
 
-/*once the document is fully loaded, Do something*/
-$d.addEventListener('DOMContentLoaded', () => {
-     console.log('fully loaded');      
-     /**/updateState(stateIndex);    
-});
-
-
 /*STARTS THE PRESENTATION OF THE GAME*/
 
-/* creates a square card. Needs the url of the image ande size of the sides. returns a node of the card.*/    
-function createCard(imgUrl, classCard, id, idCard){      
+/* creates a square card. Needs the url of the image, 
+the id (order in layout), and idPair wich is the pair number. returns a div with the card class.
+Example:
+<div class="card clickeable" id="1" data-idpair="1">
+    <img src="https://cdn.pixabay.com/photo/2019/11/08/11/56/cat-4611189_150.jpg">
+</div>
+*/    
+function createCard(imgUrl, id, idPair){      
     const $div = document.createElement("div");    
-    $img = document.createElement("img");          
+    $img = document.createElement("img");        
+    $img.classList.add('cardImg'); 
     $img.setAttribute('src', imgUrl);    
     $div.appendChild($img);
-    $div.classList.add(classCard);
+    $div.classList.add('card');
+    $div.classList.add('clickeable');
     $div.setAttribute('id', id);
-    $div.setAttribute('data-idcard', idCard);    
+    $div.setAttribute('data-idpair', idPair);    
     return $div;
-}                
+}         
 
-
-/*loads the gameboard with all the cards mixed*/
-function fillGameBoard($gBoard, cards, imgBack){ 
+/*fills the gameboard with all the cards mixed with the order attribute.
+recives the gameboard div, the quantity of cards, the array with the images.
+dont returns nothing*/
+function fillGameBoard($gBoard, quantity, imgArr){ 
     $gBoard.innerHTML = '';
-    for (let i=0; i < cards.length ; i++){        
-        cards.forEach((elem) => {
-            let img = (elem['visible'] == true) ? elem['imgUrl'] : imgBack;
-            if (elem.id == i){
-                let $card = createCard(img, 'card', elem['id'], elem['idCard']);
-                $gBoard.appendChild($card);                     
-            }    
-        });
-    }    
+    let j = 0;
+    const randomNums = fillWithRandomNums(quantity, 0, 20);        
+    for (let i=0; i < quantity ; i++){       
+        let $card = createCard(imgArr[j], i, j);     
+        $card.setAttribute('style', `order: ${randomNums[i]}`);   
+        $gBoard.appendChild($card);                
+        if (i%2 !== 0) j++;
+    }   
 }
 
-function rotateCard($gBoard, card, imgBack){    
-    if (card['visible']){
-        let $card = $d.getElementById(card['id']);
-        let $img = $card.children[0];        
+/* rotates the card. if */
+function rotateCard($gBoard, cardId, cardIdPair){    
+     let $card = $d.getElementById(cardId);
+     let $img = $card.querySelector('img');    
+    /*If its image is the generic back card image...*/
+    if ($img.src.includes('tile')){
+        /*console.log('backImg');*/
+        $card.classList.add('flip-out');
+        setTimeout(() => {
+            $img.setAttribute('src', imagesArr[cardIdPair]);
+            $card.classList.remove('flip-out');                        
+        }, 200);
+    }
+    /*if its image is the front img of the  card*/
+    else {
+        /*console.log(`Img src= ${$img.src}`);        */
         $card.classList.add('flip-out');
         setTimeout(() => {
             $img.setAttribute('src', imgBack);
-            $card.classList.remove('flip-out');            
-            card['visible'] = false;
-        }, 300);
-    }else{
-        let $card = $d.getElementById(card['id']);
-        let $img = $card.children[0];        
-        $card.classList.add('flip-out');
-        setTimeout(() => {
-            $img.setAttribute('src', card['imgUrl']);
-            $card.classList.remove('flip-out');            
-            card['visible'] = true;
-        }, 300);
-    }
-    return card;    
+            $card.classList.remove('flip-out');                        
+        }, 200);
+    }        
 }
 
 function showStats($gStats, score, lifes, time){
     const $h3Score = document.createElement("h3");
     const $h3Lifes = document.createElement("h3");
     const $h3Time = document.createElement("h3");
-
-    $gStats.innerHTML = '';
-    
-    
+    $gStats.innerHTML = '';   
     $h3Lifes.innerText = `Lifes: ${lifes}`;
     $gStats.appendChild($h3Lifes);
     $h3Score.innerText = `Score: ${score}`;
-    $gStats.appendChild($h3Score);
-    /*
+    $gStats.appendChild($h3Score);    
     $h3Time.innerText = `Time: ${time}`;
-    $gStats.appendChild($h3Time);        */      
+    $gStats.appendChild($h3Time);              
 }
 
-/*showMessages($messagesModal, points, lifes, time);*/
-function showHideMessages($modal, title, message, wButton){
-  
+///////////////////* HASTA ACA REFACTORIZADO *////////////////////////////
 
+
+/*showMessages($messagesModal, points, lifes, time);*/
+function showHideMessages($modal, title, message, wButton){ 
     const $title = $modal.querySelector('.modal-title');
     const $message = $modal.querySelector('.modal-paragraph');
-    
-   
     $title.innerHTML = '';
     $title.innerHTML = `${title}`
     $message.innerHTML = '';
     $message.innerHTML = `${message}`  
-
     if (wButton && !$modal.querySelector('button')  ){
         const $button = $d.createElement('button');
         $button.classList.add('modal-btn');
@@ -301,8 +319,7 @@ function showHideMessages($modal, title, message, wButton){
             updateState(stateIndex);
         });
         $modal.appendChild($button);
-    }
-    
+    }    
     if ($modal.classList.contains('hide')){
         $modal.classList.remove('hide');
         $modal.classList.add('show');
@@ -319,8 +336,7 @@ function startClock(){
     setInterval(() => {
         cont++;
         seconds = cont/(1000/TimeFraction);    
-        minutes = Math.trunc(seconds / 60);
-        
+        minutes = Math.trunc(seconds / 60);        
         seconds = (seconds%60).toFixed(2).toString();
         if (seconds.includes('.') === false){
             seconds = seconds + '.0';
@@ -333,11 +349,9 @@ function startClock(){
             minutes = '0' + minutes;
         }
         time = `${minutes}:${seconds}`;
-
         showStats($gameStats, points, lifes, time);    
     }, TimeFraction); 
 }
-
 /*ENDS THE PRESENTATION OF THE GAME*/
 
 
