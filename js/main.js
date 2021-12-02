@@ -1,6 +1,6 @@
 
 /*******************************SETUP OF THE GAME**************************************************************/
-const cardsQuantity = 20, maxLifes = 3, defaultQuery = 'cats';
+const cardsQuantity = 20, maxLifes = 3, timeShowing = 6000, timeIntro = 4000, defaultQuery = 'cats';
 let lifes, score, query;
 const imgBack = './imgs/tile.jpg';
 let imagesArr;
@@ -21,9 +21,19 @@ const $messagesModal = $d.querySelector('.modal');
 $d.addEventListener('DOMContentLoaded', () => {
     console.log('fully loaded');      
     /*console.log($gameBoard, $gameStats, $messagesModal); */
-    resetGame()
+    reStartGame()
 });
 
+function reStartGame(){
+    console.log('intro');
+    $gameBoard.innerHTML = '';
+    $gameStats.innerHTML = '';
+    showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);
+    setTimeout(() => {        
+        showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);        
+    }, timeIntro);
+    setTimeout(() => {resetGame()}, timeIntro + 600);
+}
 
 /*generates an array fill with random numbers, no repetitives from min to max (inclusives)*/
 function fillWithRandomNums(quantity, min, max){
@@ -55,9 +65,9 @@ async function fillWithImgs(query, quantity, min, max){
     return arr;
 }
 
-function resetGame(){
+function resetGame(){    
     /*reset this globals variables */
-    lifes = maxLifes, score = 0, query = defaultQuery;
+    lifes = 3, score = 0, query = defaultQuery;
     /*Once the async function returns the array of images*/
     fillWithImgs(query, cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
         
@@ -72,11 +82,26 @@ function resetGame(){
 function gamePlay(){
     showStats($gameStats, score, lifes, '00:01:12')
     let currentCardId = '', lastCardId = '', currentCardIdPair = '', lastCardIdPair = '';    
-    let clicksCounter = 0;
+    let clicksCounter = 0;    
+    console.clear();
+
+    for (let i = 0; i < cardsQuantity; i++){
+        $d.getElementById(i).classList.remove('clickeable');
+    }
+    setTimeout(() => {
+        console.log('hidin all the cards');
+        for (let i = 0; i < cardsQuantity; i++){
+            rotateCard($gameBoard, i);    
+            $d.getElementById(i).classList.add('clickeable');        
+        }
+    }, timeShowing);
     
+
     $d.addEventListener('click', (e) => {   
-        if (e.target.classList.contains('cardImg')){            
+        /*If its is an img and the parent element (card) has the clickeable class*/
+        if (e.target.classList.contains('cardImg') && e.target.parentElement.classList.contains('clickeable')){            
             /*console.log(e.target.parentElement.id);*/
+            clicksCounter++;
             lastCardId = (currentCardId !== '') ? currentCardId : e.target.parentElement.id;
             currentCardId = e.target.parentElement.id;
             lastCardIdPair = (currentCardIdPair !== '') ? currentCardIdPair : e.target.parentElement.dataset.idpair;
@@ -84,143 +109,57 @@ function gamePlay(){
             
             console.clear();      
 
-            if (lastCardId !== '' && clicksCounter%2 !== 0){
-                if (currentCardId !== lastCardId && currentCardIdPair === lastCardIdPair){
-                    console.log('sumaste 1 punto!');
-                }else{
-                    console.log('perdiste 1 vida!');
+            if (lastCardId !== '' && clicksCounter%2 === 0){
+                
+                /*There is coincidence in one turn */
+                if (currentCardId !== lastCardId && currentCardIdPair === lastCardIdPair){                                        
+                    if (score < cardsQuantity/2){
+                        console.log('sumaste 1 punto!');                        
+
+                        /*remove the clickable class */      
+                        $d.getElementById(currentCardId).classList.remove('clickeable');                  
+                        $d.getElementById(lastCardId).classList.remove('clickeable');    
+                        score++;
+                        showStats($gameStats, score, lifes, '00:01:12'); 
+                    } else {
+                        console.log('You Win !');
+                    }
+                        
+                
+                /*There ISNT coincidence in one turn */
+                }else{                    
+                    if (lifes > 0){
+                        console.log('perdiste 1 vida!');
+                        $d.getElementById('protection').classList.add('protectFromClicks');   
+                        lifes = lifes - 1;                                            
+                        setTimeout(() => {
+                            rotateCard($gameBoard, currentCardId, currentCardIdPair);
+                            rotateCard($gameBoard, lastCardId, lastCardIdPair);
+                            $d.getElementById('protection').classList.remove('protectFromClicks');
+                        }, 1000);
+                        
+                        showStats($gameStats, score, lifes, '00:01:12');
+                        if (lifes === 0){
+                            console.log('Game Over !');
+                            $d.getElementById('protection').classList.add('protectFromClicks');
+                            showHideMessages($messagesModal, 'Game Over', 'No tenes mas vidas, podes intentar de nuevo en un nuevo tablero!', true);
+                        }
+
+                    }                                         
                 }
             }
-
-            rotateCard($gameBoard, currentCardId, currentCardIdPair);
-            clicksCounter++;
             
-        }
-        
-        console.log(`Last Card Id: ${lastCardId} - Last Card Id Pair: ${lastCardIdPair}
-                    \nCurrent Card Id: ${currentCardId} - Current Card Id Pair: ${currentCardIdPair}\n`);      
+            console.log(`Last Card Id: ${lastCardId} - Last Card Id Pair: ${lastCardIdPair}
+                    \nCurrent Card Id: ${currentCardId} - Current Card Id Pair: ${currentCardIdPair}\n
+                    clickCounter: ${clicksCounter}\nlifes: ${lifes}\n`); 
+                
+            rotateCard($gameBoard, currentCardId, currentCardIdPair);
+            
+            
+        }    
     });    
     
 }
-function updateState(i){
-    
-    switch (i){
-        case 0:         
-            /* INTRO */                
-            showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
-            $gameBoard.innerHTML = '';
-            console.log('restarting the game');
-            lifes = 3; score = 0, stateIndex = 0;
-            /*Once the async function returns the array of images*/
-            fillWithImgs('cat', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
-                let imagesArr;
-                imagesArr = images; 
-                /*console.log(imagesArr);*/
-                cards = generateCards(cardsQuantity, imagesArr);
-                changeVisibilityAll(cards, true); 
-                console.clear();
-                console.log(`current state: ${states[stateIndex]}`);
-            }); 
-            setTimeout(() => {
-                showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
-                stateIndex++;
-                updateState(stateIndex);
-            }, 3000);            
-        break;
-        case 1:
-            /* SHOWCARDS */
-            let timeShowing = 4000;
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);
-            fillGameBoard($gameBoard, cards, imgBack);
-            
-            /*duration of this state, until its changes to the next*/
-            setTimeout(() => {
-                changeVisibilityAll(cards, false);
-                fillGameBoard($gameBoard, cards, imgBack);
-                stateIndex++;
-                updateState(stateIndex);
-            }, timeShowing);                       
-            
-        break;
-        case 2:
-            /* PLAY */            
-            
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);
-            let currentCardId = '', lastCardId = '';
-            let clicksCounter = 0;
-            let currentCard, lastCard;
-          
-            startClock();
-            $d.addEventListener('click', (e) => {
-                
-                const getCurrentCard = (id) => {return cards.filter(elem => elem.id === parseFloat(id))[0];};
-                
-                /*Only if the event was on the card element */
-                if (e.target.parentElement.classList.contains('card')){
-                    clicksCounter++;
-                    lastCardId = (currentCardId !== '') ? currentCardId : e.target.parentElement.id;
-                    currentCardId = e.target.parentElement.id;   
-                    
-                    currentCard = getCurrentCard(currentCardId);  
-                    lastCard = getCurrentCard(lastCardId);    
-                    /*if the clicked cards is not visible then rotate */
-                    currentCard = (currentCard['visible'] == false) ? rotateCard($gameBoard, currentCard, imgBack) : currentCard;     
-                
-                    if (clicksCounter > 0 && clicksCounter%2 == 0 && currentCardId !== '' && currentCardId !== lastCardId){
-                        /*si el contador de clicks es par y mayor a cero*/
-                        if(currentCard['idCard'] == lastCard['idCard'] && currentCard['id'] !== lastCard['id'] ){
-                            console.log('Sumaste 1 punto');                            
-                            score++;
-                            if (points * 2 == cardsQuantity){
-                                /*you completed the boards*/                                
-                                stateIndex = 4;
-                                updateState(stateIndex);
-                            }
-                        }else{
-                            console.log('Perdiste una vida');
-                            $d.getElementById('protection').classList.add('protectFromClicks');
-                            currentCardId = '', lastCardId = '';
-                            lifes--;
-                            if (lifes > 0){
-                                /*keep playing */
-                                
-                                setTimeout(() => {                                            
-                                    currentCard = rotateCard($gameBoard, currentCard, imgBack);
-                                    lastCard = rotateCard($gameBoard, lastCard, imgBack);
-                                    $d.getElementById('protection').classList.remove('protectFromClicks');
-                                }, 1000);
-                            }else{
-                                /* you lose */                                
-                                stateIndex++;
-                                updateState(stateIndex);
-                                
-                            }
-                        }
-                    }
-                }
-            });
-            /*PROBLEMA --- gano puntos clickeando en los mismos pares ya dados vuelta */
-
-        break;
-        case 3:
-            /* GAME OVER */
-            showHideMessages($messagesModal, 'Game Over !', 'Perdiste todos los intentos.', true);
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);            
-            console.log(`GAME OVER!\nYour score : ${points}`)
-        break;
-        case 4:
-            /* YOU WIN */
-            showHideMessages($messagesModal, 'Ganaste !', 'Completaste el tablero.', true);
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);            
-            console.log(`YOU WIN!\nYour score : ${points}`)
-        break;
-    }
-}
-
 
 /*STARTS THE PRESENTATION OF THE GAME*/
 
@@ -307,6 +246,8 @@ function showHideMessages($modal, title, message, wButton){
     $title.innerHTML = `${title}`
     $message.innerHTML = '';
     $message.innerHTML = `${message}`  
+    if ($modal.querySelector('button')) $modal.querySelector('button').remove();
+
     if (wButton && !$modal.querySelector('button')  ){
         const $button = $d.createElement('button');
         $button.classList.add('modal-btn');
@@ -315,8 +256,7 @@ function showHideMessages($modal, title, message, wButton){
             $modal.classList.remove('show');
             $modal.classList.add('hide');
             $d.getElementById('protection').classList.remove('protectFromClicks');
-            stateIndex = 0;
-            updateState(stateIndex);
+            reStartGame();
         });
         $modal.appendChild($button);
     }    
