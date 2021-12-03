@@ -25,8 +25,8 @@ body{
 .header-title{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 20px;
-    text-align: center;
-    margin: 0.5rem 0rem;
+    text-align: left;
+    margin: 0.5rem 2.5rem;
 }
 
 .header-stats{
@@ -42,6 +42,7 @@ body{
     padding: 1rem;
     background-color: rgba(255, 255, 255, 0.3);
     border-radius: 0px 0px 10px 10px;
+    border: #ca5997 solid 1px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);    
 }
@@ -56,15 +57,18 @@ body{
     overflow: hidden;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center;    
+    transition: 0.2s ease-out;
+}
+.clickeable{
     cursor: pointer;
     transition: 0.2s ease-out;
 }
-.card:hover {
-    /*border: solid #582f46 4px;*/
+.clickeable:hover {        
     box-shadow: 10px 10px 12px #525252;
 }
-.card img{
+
+.cardImg{
     width: auto;
     height: 80px;
 }
@@ -83,7 +87,7 @@ body{
     }
     .header-title{
         font-size: 28px;
-        margin: 0rem;
+        margin: 0rem 2.5rem;
     }
     .header-stats{
         font-size: 22px;        
@@ -108,6 +112,46 @@ body{
     background-color: red;
     cursor:default;
     transition: 0.4 ease-out;
+}
+
+.protectFromClicksGreen{
+    position:fixed;
+    top: 80px;
+    left: 0px;
+    width: 100vw;
+    height: 100vw;
+    min-height: 512px;
+    z-index: 10;
+    opacity: 0.2;
+    background-color: green;
+    cursor:default;
+    transition: 0.4 ease-out;
+}
+
+.btn-restart{
+    position: fixed;
+    top: 12px ;
+    right: 10vw;
+    z-index: 13;
+    opacity: 1;
+    padding: 0.2rem 0.6rem;
+    border-radius: 5px;
+    border: 0;
+    box-shadow: 4px 4px 20px rgb(48, 48, 48);
+    font-size: 14px;
+    background-color: #EED7CE;
+    color: #582f46;
+    border: 2px solid  #ca5997;
+    cursor: pointer;
+    transition: 0.4s ease-out;
+}
+.btn-restart-hide{
+    opacity: 0;
+    transition: 0.4s ease-out;
+}
+.btn-restar:hover{
+    transform: scale(1.2) rotate(4deg);    
+    transition: 0.2s ease-out;
 }
 
 /*to show this, set left to 0px*/
@@ -154,7 +198,6 @@ body{
     transition: 0.2s ease-out;
 }
 .modal-btn:hover{
-    transform: scale(1.2) rotate(4deg);
-    
+    transform: scale(1.2) rotate(4deg);    
     transition: 0.2s ease-out;
 }

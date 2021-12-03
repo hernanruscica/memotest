@@ -1,19 +1,42 @@
 
 /*******************************SETUP OF THE GAME**************************************************************/
-const cardsQuantity = 20;
-let cards;
+const cardsQuantity = 20, maxLifes = 10, timeShowing = 8000, timeIntro = 2000, defaultQuery = 'cats';
+let lifes, score, query;
 const imgBack = './imgs/tile.jpg';
-$d = document;
-const $gameBoard = $d.querySelector('.game-board');
-const $gameStats = $d.querySelector('.header-stats');
-const $messagesModal = $d.querySelector('#messages');
-const states = ['intro', 'showCards', 'play', 'gameOver', 'youWin' ];
-let stateIndex = 0;
-let lifes = 10, points = 0;
+let imagesArr;
 /*******************************SETUP OF THE GAME**************************************************************/
 
 
-/*STARTS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
+/*******************************HTML ELEMENTS**************************************************************/
+const $d = document;
+const $gameBoard = $d.querySelector('.game-board');
+let $cards = ''; /*defined in fillGameBoard() */
+const $gameStats = $d.querySelector('.header-stats');
+
+const $h3Lifes = $d.querySelector('.stats-lifes');
+const $h3Score = $d.querySelector('.stats-score');
+const $timer = $d.querySelector('.timer');
+
+const $messagesModal = $d.querySelector('.modal');
+
+
+/*******************************HTML ELEMENTS**************************************************************/
+
+
+/*once the document is fully loaded, Do something*/
+$d.addEventListener('DOMContentLoaded', () => {
+    console.log('fully loaded');      
+    /*console.log($gameBoard, $gameStats, $messagesModal); */
+    console.log('intro');
+    $gameBoard.innerHTML = '';
+    
+    showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);
+    setTimeout(() => {        
+        showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);        
+    }, timeIntro);
+    setTimeout(() => {resetGame()}, timeIntro + 600);
+});
+
 
 /*generates an array fill with random numbers, no repetitives from min to max (inclusives)*/
 function fillWithRandomNums(quantity, min, max){
@@ -28,9 +51,6 @@ function fillWithRandomNums(quantity, min, max){
     }
     return arr;
 }
-const randomNums =  fillWithRandomNums(10, 0, 10);
-/*console.log(randomNums);*/
-
 
 /*returns an array with random images from API pixabay, with a query string, a min a max index, and the quantity of images needed (https://pixabay.com/api/docs)*/
 async function fillWithImgs(query, quantity, min, max){
@@ -48,246 +68,218 @@ async function fillWithImgs(query, quantity, min, max){
     return arr;
 }
 
-/*generates cards */
-function generateCards(quantity, imgsArr){    
-    /*  Cards structure : [{id: number, idCard: number, visible: boolean, paired: boolean, imgUrl: string},...] */
-    const arr = [];
-    const randomNums =  fillWithRandomNums(quantity, 0, quantity);
-    let j = 0;
-    for (let i = 0 ; i < quantity ; i++){
-        arr.push({'id': randomNums[i], 'idCard': j, 'visible': true, 'paired': false, 'imgUrl': imgsArr[j] })  
-        /*si es impar*/
-        if (i%2 !== 0) j++;      
-    }    
-    return arr;
+function resetGame(){    
+    /*reset this globals variables */
+    lifes = maxLifes, score = 0, query = defaultQuery;
+    /*Once the async function returns the array of images*/
+    fillWithImgs(query, cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
+        
+        imagesArr = images; 
+        /*console.log(imagesArr);*/              
+        fillGameBoard($gameBoard, cardsQuantity, imagesArr, imgBack);
+        $cards = $d.getElementsByClassName('card');
+        gamePlay();
+    }); 
 }
 
-/*Once the async function returns the array of images*/
-fillWithImgs('cat', cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
-    let imagesArr;
-    imagesArr = images; 
-    /*console.log(imagesArr);*/
-    cards = generateCards(cardsQuantity, imagesArr);
-    /*console.log(cards);*/
-});
-
-function changeVisibilityAll(cards, value){
-    cards.forEach((elem) => {
-        elem['visible'] = value;
-    });
-}
-
-/*ENDS THE LOGIC OF THE GAME, NOT THE PRESENTATION*/
-
-function updateState(i){
+function gamePlay(){
     
-    switch (i){
-        case 0:         
-            /* INTRO */    
-            showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);
-            setTimeout(() => {
-                showHideMessages($messagesModal, 'Mira las cartas', 'y memoriza los pares', false);
-                stateIndex++;
-                updateState(stateIndex);
-            }, 2000);            
-        break;
-        case 1:
-            /* SHOWCARDS */
-            let timeShowing = 4000;
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);
-            fillGameBoard($gameBoard, cards, imgBack);
-            
-            /*duration of this state, until its changes to the next*/
-            setTimeout(() => {
-                changeVisibilityAll(cards, false);
-                fillGameBoard($gameBoard, cards, imgBack);
-                stateIndex++;
-                updateState(stateIndex);
-            }, timeShowing);                       
-            
-        break;
-        case 2:
-            /* PLAY */            
-            
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);
-            let currentCardId = '', lastCardId = '';
-            let clicksCounter = 0;
-            let currentCard, lastCard;
-          
-            startClock();
-            $d.addEventListener('click', (e) => {
-                
-                const getCurrentCard = (id) => {return cards.filter(elem => elem.id === parseFloat(id))[0];};
-                
-                /*Only if the event was on the card element */
-                if (e.target.parentElement.classList.contains('card')){
-                    clicksCounter++;
-                    lastCardId = (currentCardId !== '') ? currentCardId : e.target.parentElement.id;
-                    currentCardId = e.target.parentElement.id;   
-                    
-                    currentCard = getCurrentCard(currentCardId);  
-                    lastCard = getCurrentCard(lastCardId);    
-                    /*if the clicked cards is not visible then rotate */
-                    currentCard = (currentCard['visible'] == false) ? rotateCard($gameBoard, currentCard, imgBack) : currentCard;     
-                
-                    if (clicksCounter > 0 && clicksCounter%2 == 0 && currentCardId !== '' && currentCardId !== lastCardId){
-                        /*si el contador de clicks es par y mayor a cero*/
-                        if(currentCard['idCard'] == lastCard['idCard'] && currentCard['id'] !== lastCard['id'] ){
-                            console.log('Sumaste 1 punto');                            
-                            points++;
-                            if (points * 2 == cardsQuantity){
-                                /*you completed the boards*/                                
-                                stateIndex = 4;
-                                updateState(stateIndex);
-                            }
-                        }else{
-                            console.log('Perdiste una vida');
-                            $d.getElementById('protection').classList.add('protectFromClicks');
-                            currentCardId = '', lastCardId = '';
-                            lifes--;
-                            if (lifes > 0){
-                                /*keep playing */
-                                
-                                setTimeout(() => {                                            
-                                    currentCard = rotateCard($gameBoard, currentCard, imgBack);
-                                    lastCard = rotateCard($gameBoard, lastCard, imgBack);
-                                    $d.getElementById('protection').classList.remove('protectFromClicks');
-                                }, 1000);
-                            }else{
-                                /* you lose */                                
-                                stateIndex++;
-                                updateState(stateIndex);
-                                
-                            }
-                        }
-                    }
-                }
-            });
-            /*PROBLEMA --- gano puntos clickeando en los mismos pares ya dados vuelta */
+    showStats();
+    
+    let currentCardId = '', lastCardId = '', currentCardIdPair = '', lastCardIdPair = '';    
+    let clicksCounter = 0;    
+    console.clear();
 
-        break;
-        case 3:
-            /* GAME OVER */
-            showHideMessages($messagesModal, 'Game Over !', 'Perdiste todos los intentos.', true);
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);            
-            console.log(`GAME OVER!\nYour score : ${points}`)
-        break;
-        case 4:
-            /* YOU WIN */
-            showHideMessages($messagesModal, 'Ganaste !', 'Completaste el tablero.', true);
-            console.clear();
-            console.log(`current state: ${states[stateIndex]}`);            
-            console.log(`YOU WIN!\nYour score : ${points}`)
-        break;
+    for (let i = 0; i < cardsQuantity; i++){
+        $d.getElementById(i).classList.remove('clickeable');
     }
+    
+    let j = timeShowing/1000 - 1;
+    let startCountDown = setInterval(countDown, 1000);  
+
+    function countDown(){
+        $timer.innerHTML = `Comenzando en ${j}`;
+        j--;
+    }    
+
+    setTimeout(() => {
+        console.log('hidin all the cards');
+        clearInterval(startCountDown);
+        $d.querySelector('.btn-restart').classList.remove('btn-restart-hide');
+        startTimer();
+        /*$d.location.reload(true)
+        para agregar un boton al lado del titulo
+         .btn-restart-hide*/
+
+        for (let i = 0; i < cardsQuantity; i++){
+            rotateCard($gameBoard, i);    
+            $d.getElementById(i).classList.add('clickeable');        
+        }
+    }, timeShowing);
+    
+
+    $d.addEventListener('click', (e) => {   
+        /*If its is an img and the parent element (card) has the clickeable class*/
+        if (e.target.classList.contains('cardImg') && e.target.parentElement.classList.contains('clickeable')){            
+            /*console.log(e.target.parentElement.id);*/
+            clicksCounter++;
+            lastCardId = (currentCardId !== '') ? currentCardId : e.target.parentElement.id;
+            currentCardId = e.target.parentElement.id;
+            lastCardIdPair = (currentCardIdPair !== '') ? currentCardIdPair : e.target.parentElement.dataset.idpair;
+            currentCardIdPair = e.target.parentElement.dataset.idpair;
+            
+            console.clear();      
+
+            if (clicksCounter%2 === 0){
+                
+                /*There is coincidence in one turn */
+                if (currentCardId !== lastCardId && currentCardIdPair === lastCardIdPair){                                        
+                    if (score < cardsQuantity/2){
+                        console.log('sumaste 1 punto!');                       
+                        /*remove the clickable class */      
+                        $d.getElementById(currentCardId).classList.remove('clickeable');                  
+                        $d.getElementById(lastCardId).classList.remove('clickeable');   
+                        $d.getElementById('protection').classList.add('protectFromClicksGreen'); 
+                        setTimeout(() => {$d.getElementById('protection').classList.remove('protectFromClicksGreen')}, 500 );
+                        score++;
+                        showStats(); 
+                        if (score === cardsQuantity/2){
+                            console.log('You Win !');
+                            stopTimer();
+                            $d.getElementById('protection').classList.add('protectFromClicksGreen');
+                            showHideMessages($messagesModal, 'You Win', 'Completaste el tablero, podes intentar de nuevo en un nuevo tablero!', true);
+                        }
+                    }                       
+                
+                /*There ISNT coincidence in one turn */
+                }else{                    
+                    if (lifes > 0){
+                        console.log('perdiste 1 vida!');
+                        $d.getElementById('protection').classList.add('protectFromClicks');   
+                        lifes = lifes - 1;                                            
+                        setTimeout(() => {
+                            rotateCard($gameBoard, currentCardId, currentCardIdPair);
+                            rotateCard($gameBoard, lastCardId, lastCardIdPair);
+                            $d.getElementById('protection').classList.remove('protectFromClicks');
+                        }, 1000);                        
+                        showStats();
+                        if (lifes === 0){
+                            console.log('Game Over !');
+                            stopTimer();
+                            $d.getElementById('protection').classList.add('protectFromClicks');
+                            showHideMessages($messagesModal, 'Game Over', 'No tenes mas vidas, podes intentar de nuevo en un nuevo tablero!', true);
+                        }
+
+                    }                                         
+                }
+            }
+            
+            console.log(`Last Card Id: ${lastCardId} - Last Card Id Pair: ${lastCardIdPair}
+                    \nCurrent Card Id: ${currentCardId} - Current Card Id Pair: ${currentCardIdPair}\n
+                    clickCounter: ${clicksCounter}\nlifes: ${lifes}\n`); 
+                
+            rotateCard($gameBoard, currentCardId, currentCardIdPair);
+            
+            
+        }    
+    });    
+    
 }
 
-
-/*once the document is fully loaded, Do something*/
-$d.addEventListener('DOMContentLoaded', () => {
-     console.log('fully loaded');      
-     /**/updateState(stateIndex);    
-});
-
-/*
-function resetGame(){
-    stateIndex = 0;
-    updateState(stateIndex);
-}
-*/
 /*STARTS THE PRESENTATION OF THE GAME*/
 
-/* creates a square card. Needs the url of the image ande size of the sides. returns a node of the card.*/    
-function createCard(imgUrl, classCard, id, idCard){      
+/* creates a square card. Needs the url of the image, 
+the id (order in layout), and idPair wich is the pair number. returns a div with the card class.
+Example:
+<div class="card clickeable" id="1" data-idpair="1">
+    <img src="https://cdn.pixabay.com/photo/2019/11/08/11/56/cat-4611189_150.jpg">
+</div>
+*/    
+function createCard(imgUrl, id, idPair){      
     const $div = document.createElement("div");    
-    $img = document.createElement("img");          
+    $img = document.createElement("img");        
+    $img.classList.add('cardImg'); 
     $img.setAttribute('src', imgUrl);    
     $div.appendChild($img);
-    $div.classList.add(classCard);
+    $div.classList.add('card');
+    $div.classList.add('clickeable');
     $div.setAttribute('id', id);
-    $div.setAttribute('data-idcard', idCard);    
+    $div.setAttribute('data-idpair', idPair);    
     return $div;
-}                
+}         
 
-
-/*loads the gameboard with all the cards mixed*/
-function fillGameBoard($gBoard, cards, imgBack){ 
+/*fills the gameboard with all the cards mixed with the order attribute.
+recives the gameboard div, the quantity of cards, the array with the images.
+dont returns nothing*/
+function fillGameBoard($gBoard, quantity, imgArr){ 
     $gBoard.innerHTML = '';
-    for (let i=0; i < cards.length ; i++){        
-        cards.forEach((elem) => {
-            let img = (elem['visible'] == true) ? elem['imgUrl'] : imgBack;
-            if (elem.id == i){
-                let $card = createCard(img, 'card', elem['id'], elem['idCard']);
-                $gBoard.appendChild($card);                     
-            }    
-        });
-    }    
+    let j = 0;
+    const randomNums = fillWithRandomNums(quantity, 0, 20);        
+    for (let i=0; i < quantity ; i++){       
+        let $card = createCard(imgArr[j], i, j);     
+        $card.setAttribute('style', `order: ${randomNums[i]}`);   
+        $gBoard.appendChild($card);                
+        if (i%2 !== 0) j++;
+    }   
 }
 
-function rotateCard($gBoard, card, imgBack){    
-    if (card['visible']){
-        let $card = $d.getElementById(card['id']);
-        let $img = $card.children[0];        
+/* rotates the card. if */
+function rotateCard($gBoard, cardId, cardIdPair){    
+     let $card = $d.getElementById(cardId);
+     let $img = $card.querySelector('img');    
+    /*If its image is the generic back card image...*/
+    if ($img.src.includes('tile')){
+        /*console.log('backImg');*/
+        $card.classList.add('flip-out');
+        setTimeout(() => {
+            $img.setAttribute('src', imagesArr[cardIdPair]);
+            $card.classList.remove('flip-out');                        
+        }, 200);
+    }
+    /*if its image is the front img of the  card*/
+    else {
+        /*console.log(`Img src= ${$img.src}`);        */
         $card.classList.add('flip-out');
         setTimeout(() => {
             $img.setAttribute('src', imgBack);
-            $card.classList.remove('flip-out');            
-            card['visible'] = false;
-        }, 300);
-    }else{
-        let $card = $d.getElementById(card['id']);
-        let $img = $card.children[0];        
-        $card.classList.add('flip-out');
-        setTimeout(() => {
-            $img.setAttribute('src', card['imgUrl']);
-            $card.classList.remove('flip-out');            
-            card['visible'] = true;
-        }, 300);
-    }
-    return card;    
+            $card.classList.remove('flip-out');                        
+        }, 200);
+    }        
 }
 
-function showStats($gStats, score, lifes, time){
-    const $h3Score = document.createElement("h3");
-    const $h3Lifes = document.createElement("h3");
-    const $h3Time = document.createElement("h3");
-
-    $gStats.innerHTML = '';
-    
-    
-    $h3Lifes.innerText = `Lifes: ${lifes}`;
-    $gStats.appendChild($h3Lifes);
-    $h3Score.innerText = `Score: ${score}`;
-    $gStats.appendChild($h3Score);
-    $h3Time.innerText = `Time: ${time}`;
-    $gStats.appendChild($h3Time);              
+function showStats(){
+    $h3Lifes.innerHTML = '';   
+    $h3Lifes.innerHTML = `Lifes: ${lifes}`;
+    $h3Score.innerHTML = '';
+    $h3Score.innerHTML = `Score: ${score}`;                     
 }
+
+///////////////////* HASTA ACA REFACTORIZADO *////////////////////////////
+
 
 /*showMessages($messagesModal, points, lifes, time);*/
-function showHideMessages($modal, title, message, wButton){
-  
-
+function showHideMessages($modal, title, message, wButton){ 
     const $title = $modal.querySelector('.modal-title');
     const $message = $modal.querySelector('.modal-paragraph');
-    
-   
     $title.innerHTML = '';
     $title.innerHTML = `${title}`
     $message.innerHTML = '';
     $message.innerHTML = `${message}`  
+    if ($modal.querySelector('button')) $modal.querySelector('button').remove();
 
-    if (wButton){
+    if (wButton && !$modal.querySelector('button')  ){
         const $button = $d.createElement('button');
         $button.classList.add('modal-btn');
         $button.innerHTML = 'Volver a intentar!';
+        $button.addEventListener('click', (e) => {
+            $modal.classList.remove('show');
+            $modal.classList.add('hide');
+            $d.getElementById('protection').classList.remove('protectFromClicks');
+            /*reloads the page*/
+            $d.location.reload(true)
+        });
         $modal.appendChild($button);
-    }
-    
+    }    
     if ($modal.classList.contains('hide')){
         $modal.classList.remove('hide');
         $modal.classList.add('show');
@@ -297,32 +289,71 @@ function showHideMessages($modal, title, message, wButton){
     }
 }
 
-/*deberia usar esto clearInterval(clockTempo); */
-function startClock(){
-    let cont = 0;
-    let TimeFraction = 100, seconds = 0, minutes = 0, time = '';
-    setInterval(() => {
-        cont++;
-        seconds = cont/(1000/TimeFraction);    
-        minutes = Math.trunc(seconds / 60);
-        
-        seconds = (seconds%60).toFixed(2).toString();
-        if (seconds.includes('.') === false){
-            seconds = seconds + '.0';
-        }
-        if (seconds.indexOf('.') === 1){
-            seconds = '0' + seconds;
-        }    
-        minutes = minutes.toString();
-        if (minutes.length === 1){
-            minutes = '0' + minutes;
-        }
-        time = `${minutes}:${seconds}`;
+/*var hr = 0;*/
+var min = 0;
+var sec = 0;
+var stoptime = true;
 
-        showStats($gameStats, points, lifes, time);    
-    }, TimeFraction); 
+/////////////////////////////////////--------* TIMER *-----------//////////////////////////////////////
+
+function startTimer() {
+  if (stoptime == true) {
+        stoptime = false;
+        timerCycle();
+    }
+}
+function stopTimer() {
+  if (stoptime == false) {
+    stoptime = true;
+  }
 }
 
-/*ENDS THE PRESENTATION OF THE GAME*/
+function timerCycle() {
+    
+    if (stoptime == false) {
+    sec = parseInt(sec);
+    min = parseInt(min);
+    /*hr = parseInt(hr);*/
+
+    sec = sec + 1;
+
+    if (sec == 60) {
+      min = min + 1;
+      sec = 0;
+    }
+    if (min == 60) {
+      hr = hr + 1;
+      min = 0;
+      sec = 0;
+    }
+
+    if (sec < 10 || sec == 0) {
+      sec = '0' + sec;
+    }
+    if (min < 10 || min == 0) {
+      min = '0' + min;
+    }
+    /*if (hr < 10 || hr == 0) {
+      hr = '0' + hr;
+    }
+    */
+    $timer.innerHTML = '';
+    $timer.innerHTML = min + ':' + sec;
+
+    setTimeout("timerCycle()", 1000);
+  }
+}
+
+function resetTimer() {    
+    $timer.innerHTML = "00:00:00";
+    stoptime = true;
+    hr = 0;
+    sec = 0;
+    min = 0;
+}
+
+
+
+
 
 
