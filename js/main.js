@@ -1,6 +1,6 @@
 
 /*******************************SETUP OF THE GAME**************************************************************/
-const cardsQuantity = 20, maxLifes = 10, timeShowing = 8000, timeIntro = 2000, defaultQuery = 'cats';
+const cardsQuantity = 20, maxLifes = 10, timeShowing = 8000, timeIntro = 3000, defaultQuery = 'cats';
 let lifes, score, query;
 const imgBack = './imgs/tile.jpg';
 let imagesArr;
@@ -18,7 +18,21 @@ const $h3Score = $d.querySelector('.stats-score');
 const $timer = $d.querySelector('.timer');
 
 const $messagesModal = $d.querySelector('.modal');
-
+const welcomeMessages = [
+                        'Bienvenido al juego mas pulenta, el que juega el ninio japi',
+                        'Bienvenido, estas en una comisaria y vamos a jugar a este memotest'
+                        ];
+const winnerMessages = [
+                        'Completaste el tablero. Te ganaste un SET DE CHORRIZOS!<br>',
+                        'Aleluya, encontraste todos los pares. Te ganaste una POSTAL DE GAROMPA! La ciudad natal de PEPERINO.<br>',
+                        'Conchituma, conchituma, te ganaste un CURSO DE CONTROL MENTAL en Gambeta Institute.<br>',
+                        'tus puntos = cantidad de cartas dividido 2, es decir que ganaste  por la ley de la palanca de galimberti!<br>'
+                        ];
+const losserMessages = [
+                        'Se te acabaron las vidas.<br>',
+                        'Perdiste y te tenes que ir del FUTBOL como FATI.<br>'
+                        ];
+const tryAgainMessage = 'Podes probar de nuevo, dandole al boton de reintentar que esta arriba!';
 
 /*******************************HTML ELEMENTS**************************************************************/
 
@@ -30,9 +44,10 @@ $d.addEventListener('DOMContentLoaded', () => {
     console.log('intro');
     $gameBoard.innerHTML = '';
     
-    showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);
+    let ranNum = Math.floor(Math.random() * welcomeMessages.length);
+    showHideMessages($messagesModal, 'CHACHACHA MEMOTEST', welcomeMessages[ranNum] , false);
     setTimeout(() => {        
-        showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);        
+        showHideMessages($messagesModal, 'CHACHACHA MEMOTEST', welcomeMessages[ranNum], false);        
     }, timeIntro);
     setTimeout(() => {resetGame()}, timeIntro + 600);
 });
@@ -105,6 +120,7 @@ function gamePlay(){
     setTimeout(() => {
         console.log('hidin all the cards');
         clearInterval(startCountDown);
+        $d.querySelector('.btn-restart').classList.remove('btn-restart-hide');
         startTimer();
         /*$d.location.reload(true)
         para agregar un boton al lado del titulo
@@ -146,7 +162,8 @@ function gamePlay(){
                             console.log('You Win !');
                             stopTimer();
                             $d.getElementById('protection').classList.add('protectFromClicksGreen');
-                            showHideMessages($messagesModal, 'You Win', 'Completaste el tablero, podes intentar de nuevo en un nuevo tablero!', true);
+                            let ranNum = Math.floor(Math.random() * winnerMessages.length);
+                            showHideMessages($messagesModal, 'GANASTE', winnerMessages[ranNum] + tryAgainMessage, false);                            
                         }
                     }                       
                 
@@ -166,7 +183,8 @@ function gamePlay(){
                             console.log('Game Over !');
                             stopTimer();
                             $d.getElementById('protection').classList.add('protectFromClicks');
-                            showHideMessages($messagesModal, 'Game Over', 'No tenes mas vidas, podes intentar de nuevo en un nuevo tablero!', true);
+                            let ranNum = Math.floor(Math.random() * losserMessages.length);
+                            showHideMessages($messagesModal, 'PERDISTE', losserMessages[ranNum] + tryAgainMessage, false);                            
                         }
 
                     }                                         
@@ -288,7 +306,7 @@ function showHideMessages($modal, title, message, wButton){
     }
 }
 
-var hr = 0;
+/*var hr = 0;*/
 var min = 0;
 var sec = 0;
 var stoptime = true;
@@ -312,7 +330,7 @@ function timerCycle() {
     if (stoptime == false) {
     sec = parseInt(sec);
     min = parseInt(min);
-    hr = parseInt(hr);
+    /*hr = parseInt(hr);*/
 
     sec = sec + 1;
 
@@ -332,12 +350,12 @@ function timerCycle() {
     if (min < 10 || min == 0) {
       min = '0' + min;
     }
-    if (hr < 10 || hr == 0) {
+    /*if (hr < 10 || hr == 0) {
       hr = '0' + hr;
     }
-    
+    */
     $timer.innerHTML = '';
-    $timer.innerHTML = hr + ':' + min + ':' + sec;
+    $timer.innerHTML = min + ':' + sec;
 
     setTimeout("timerCycle()", 1000);
   }
