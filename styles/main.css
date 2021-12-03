@@ -113,6 +113,44 @@ body{
     transition: 0.4 ease-out;
 }
 
+.protectFromClicksGreen{
+    position:fixed;
+    top: 80px;
+    left: 0px;
+    width: 100vw;
+    height: 100vw;
+    min-height: 512px;
+    z-index: 10;
+    opacity: 0.2;
+    background-color: green;
+    cursor:default;
+    transition: 0.4 ease-out;
+}
+
+.btn-restart{
+    position: fixed;
+    top: 12px ;
+    right: 10vw;
+    z-index: 13;
+    opacity: 1;
+    padding: 0.3rem 0.8rem;
+    border-radius: 5px;
+    border: 0;
+    box-shadow: 5px 5px 18px rgb(48, 48, 48);
+    font-size: 16px;
+    background-color: #FF87CA;
+    color: honeydew;
+    cursor: pointer;
+    transition: 0.2s ease-out;
+}
+.btn-restart-hide{
+    opacity: 0;
+}
+.btn-restar:hover{
+    transform: scale(1.2) rotate(4deg);    
+    transition: 0.2s ease-out;
+}
+
 /*to show this, set left to 0px*/
 .modal{
     position:fixed;
@@ -157,7 +195,6 @@ body{
     transition: 0.2s ease-out;
 }
 .modal-btn:hover{
-    transform: scale(1.2) rotate(4deg);
-    
+    transform: scale(1.2) rotate(4deg);    
     transition: 0.2s ease-out;
 }

@@ -1,6 +1,6 @@
 
 /*******************************SETUP OF THE GAME**************************************************************/
-const cardsQuantity = 20, maxLifes = 3, timeShowing = 6000, timeIntro = 4000, defaultQuery = 'cats';
+const cardsQuantity = 20, maxLifes = 10, timeShowing = 8000, timeIntro = 2000, defaultQuery = 'cats';
 let lifes, score, query;
 const imgBack = './imgs/tile.jpg';
 let imagesArr;
@@ -12,7 +12,13 @@ const $d = document;
 const $gameBoard = $d.querySelector('.game-board');
 let $cards = ''; /*defined in fillGameBoard() */
 const $gameStats = $d.querySelector('.header-stats');
+
+const $h3Lifes = $d.querySelector('.stats-lifes');
+const $h3Score = $d.querySelector('.stats-score');
+const $timer = $d.querySelector('.timer');
+
 const $messagesModal = $d.querySelector('.modal');
+
 
 /*******************************HTML ELEMENTS**************************************************************/
 
@@ -21,19 +27,16 @@ const $messagesModal = $d.querySelector('.modal');
 $d.addEventListener('DOMContentLoaded', () => {
     console.log('fully loaded');      
     /*console.log($gameBoard, $gameStats, $messagesModal); */
-    reStartGame()
-});
-
-function reStartGame(){
     console.log('intro');
     $gameBoard.innerHTML = '';
-    $gameStats.innerHTML = '';
+    
     showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);
     setTimeout(() => {        
         showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);        
     }, timeIntro);
     setTimeout(() => {resetGame()}, timeIntro + 600);
-}
+});
+
 
 /*generates an array fill with random numbers, no repetitives from min to max (inclusives)*/
 function fillWithRandomNums(quantity, min, max){
@@ -67,7 +70,7 @@ async function fillWithImgs(query, quantity, min, max){
 
 function resetGame(){    
     /*reset this globals variables */
-    lifes = 3, score = 0, query = defaultQuery;
+    lifes = maxLifes, score = 0, query = defaultQuery;
     /*Once the async function returns the array of images*/
     fillWithImgs(query, cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
         
@@ -80,7 +83,9 @@ function resetGame(){
 }
 
 function gamePlay(){
-    showStats($gameStats, score, lifes, '00:01:12')
+    
+    showStats();
+    
     let currentCardId = '', lastCardId = '', currentCardIdPair = '', lastCardIdPair = '';    
     let clicksCounter = 0;    
     console.clear();
@@ -88,8 +93,23 @@ function gamePlay(){
     for (let i = 0; i < cardsQuantity; i++){
         $d.getElementById(i).classList.remove('clickeable');
     }
+    
+    let j = timeShowing/1000 - 1;
+    let startCountDown = setInterval(countDown, 1000);  
+
+    function countDown(){
+        $timer.innerHTML = `Comenzando en ${j}`;
+        j--;
+    }    
+
     setTimeout(() => {
         console.log('hidin all the cards');
+        clearInterval(startCountDown);
+        startTimer();
+        /*$d.location.reload(true)
+        para agregar un boton al lado del titulo
+         .btn-restart-hide*/
+
         for (let i = 0; i < cardsQuantity; i++){
             rotateCard($gameBoard, i);    
             $d.getElementById(i).classList.add('clickeable');        
@@ -109,22 +129,26 @@ function gamePlay(){
             
             console.clear();      
 
-            if (lastCardId !== '' && clicksCounter%2 === 0){
+            if (clicksCounter%2 === 0){
                 
                 /*There is coincidence in one turn */
                 if (currentCardId !== lastCardId && currentCardIdPair === lastCardIdPair){                                        
                     if (score < cardsQuantity/2){
-                        console.log('sumaste 1 punto!');                        
-
+                        console.log('sumaste 1 punto!');                       
                         /*remove the clickable class */      
                         $d.getElementById(currentCardId).classList.remove('clickeable');                  
-                        $d.getElementById(lastCardId).classList.remove('clickeable');    
+                        $d.getElementById(lastCardId).classList.remove('clickeable');   
+                        $d.getElementById('protection').classList.add('protectFromClicksGreen'); 
+                        setTimeout(() => {$d.getElementById('protection').classList.remove('protectFromClicksGreen')}, 500 );
                         score++;
-                        showStats($gameStats, score, lifes, '00:01:12'); 
-                    } else {
-                        console.log('You Win !');
-                    }
-                        
+                        showStats(); 
+                        if (score === cardsQuantity/2){
+                            console.log('You Win !');
+                            stopTimer();
+                            $d.getElementById('protection').classList.add('protectFromClicksGreen');
+                            showHideMessages($messagesModal, 'You Win', 'Completaste el tablero, podes intentar de nuevo en un nuevo tablero!', true);
+                        }
+                    }                       
                 
                 /*There ISNT coincidence in one turn */
                 }else{                    
@@ -136,11 +160,11 @@ function gamePlay(){
                             rotateCard($gameBoard, currentCardId, currentCardIdPair);
                             rotateCard($gameBoard, lastCardId, lastCardIdPair);
                             $d.getElementById('protection').classList.remove('protectFromClicks');
-                        }, 1000);
-                        
-                        showStats($gameStats, score, lifes, '00:01:12');
+                        }, 1000);                        
+                        showStats();
                         if (lifes === 0){
                             console.log('Game Over !');
+                            stopTimer();
                             $d.getElementById('protection').classList.add('protectFromClicks');
                             showHideMessages($messagesModal, 'Game Over', 'No tenes mas vidas, podes intentar de nuevo en un nuevo tablero!', true);
                         }
@@ -222,17 +246,11 @@ function rotateCard($gBoard, cardId, cardIdPair){
     }        
 }
 
-function showStats($gStats, score, lifes, time){
-    const $h3Score = document.createElement("h3");
-    const $h3Lifes = document.createElement("h3");
-    const $h3Time = document.createElement("h3");
-    $gStats.innerHTML = '';   
-    $h3Lifes.innerText = `Lifes: ${lifes}`;
-    $gStats.appendChild($h3Lifes);
-    $h3Score.innerText = `Score: ${score}`;
-    $gStats.appendChild($h3Score);    
-    $h3Time.innerText = `Time: ${time}`;
-    $gStats.appendChild($h3Time);              
+function showStats(){
+    $h3Lifes.innerHTML = '';   
+    $h3Lifes.innerHTML = `Lifes: ${lifes}`;
+    $h3Score.innerHTML = '';
+    $h3Score.innerHTML = `Score: ${score}`;                     
 }
 
 ///////////////////* HASTA ACA REFACTORIZADO *////////////////////////////
@@ -256,7 +274,8 @@ function showHideMessages($modal, title, message, wButton){
             $modal.classList.remove('show');
             $modal.classList.add('hide');
             $d.getElementById('protection').classList.remove('protectFromClicks');
-            reStartGame();
+            /*reloads the page*/
+            $d.location.reload(true)
         });
         $modal.appendChild($button);
     }    
@@ -269,29 +288,69 @@ function showHideMessages($modal, title, message, wButton){
     }
 }
 
-/*deberia usar esto clearInterval(clockTempo); */
-function startClock(){
-    let cont = 0;
-    let TimeFraction = 100, seconds = 0, minutes = 0, time = '';
-    setInterval(() => {
-        cont++;
-        seconds = cont/(1000/TimeFraction);    
-        minutes = Math.trunc(seconds / 60);        
-        seconds = (seconds%60).toFixed(2).toString();
-        if (seconds.includes('.') === false){
-            seconds = seconds + '.0';
-        }
-        if (seconds.indexOf('.') === 1){
-            seconds = '0' + seconds;
-        }    
-        minutes = minutes.toString();
-        if (minutes.length === 1){
-            minutes = '0' + minutes;
-        }
-        time = `${minutes}:${seconds}`;
-        showStats($gameStats, points, lifes, time);    
-    }, TimeFraction); 
+var hr = 0;
+var min = 0;
+var sec = 0;
+var stoptime = true;
+
+/////////////////////////////////////--------* TIMER *-----------//////////////////////////////////////
+
+function startTimer() {
+  if (stoptime == true) {
+        stoptime = false;
+        timerCycle();
+    }
 }
-/*ENDS THE PRESENTATION OF THE GAME*/
+function stopTimer() {
+  if (stoptime == false) {
+    stoptime = true;
+  }
+}
+
+function timerCycle() {
+    
+    if (stoptime == false) {
+    sec = parseInt(sec);
+    min = parseInt(min);
+    hr = parseInt(hr);
+
+    sec = sec + 1;
+
+    if (sec == 60) {
+      min = min + 1;
+      sec = 0;
+    }
+    if (min == 60) {
+      hr = hr + 1;
+      min = 0;
+      sec = 0;
+    }
+
+    if (sec < 10 || sec == 0) {
+      sec = '0' + sec;
+    }
+    if (min < 10 || min == 0) {
+      min = '0' + min;
+    }
+    if (hr < 10 || hr == 0) {
+      hr = '0' + hr;
+    }
+    
+    $timer.innerHTML = '';
+    $timer.innerHTML = hr + ':' + min + ':' + sec;
+
+    setTimeout("timerCycle()", 1000);
+  }
+}
+
+function resetTimer() {    
+    $timer.innerHTML = "00:00:00";
+    stoptime = true;
+    hr = 0;
+    sec = 0;
+    min = 0;
+}
+
+
 
 

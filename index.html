@@ -9,17 +9,19 @@
 </head>
 <body>
     <div id ='protection' ></div>
+    <button class ='btn-restart' onclick="$d.location.reload(true);">Reiniciar</button>
     <div id ='messages ' class="modal hide">
         <h3 class="modal-title">Game Over!</h3>
-        <p class="modal-paragraph">Your score: 3</p>
-        
+        <p class="modal-paragraph">Your score: 3</p>        
     </div>
     <div class="app">
         <div class="header">
-            <h1 class='header-title'>Memo test App</h1> 
-            <div class="header-stats">
-                
-            </div>            
+            <h1 class='header-title'>Memo test App</h1>             
+            <div class="header-stats">   
+                <h3 class='stats-lifes'></h3>             
+                <h3 class='stats-score'></h3>             
+                <h3 class='timer'></h3>  
+            </div>                        
         </div>
         <div class="game-board">                    
         </div>
