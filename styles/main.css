@@ -1,10 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400&display=swap');
+
 *{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 body{    
-    font-family: sans-serif;
+    font-family: 'Source Sans Pro', sans-serif;
     background-color: #EED7CE;
 }
 .app{
@@ -17,40 +20,40 @@ body{
     display: flex;
     flex-direction: column;
     height: 80px;
-    background-color: #FFC4E1;
-    color: #ca5997;   
+    background-color: #FDA65D;
+    color: #E26A2C;   
     box-shadow: 0px 5px 8px #525252; 
     z-index: 11;
 }
 .header-title{
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 20px;
+    font-family: 'Londrina Solid', cursive;
+    
+    font-size: 26px;
     text-align: left;
-    margin: 0.5rem 2.5rem;
+    margin: 0.5rem .5rem;
 }
 
 .header-stats{
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 14px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1em;
+    color: brown;   
 }
 
 .game-board{
-    margin: 0rem auto;
-    padding: 1rem;
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 0px 0px 10px 10px;
-    border: #ca5997 solid 1px;
+    margin: 2rem auto;    
+    width: 320px;
+    height: 400px;    
+    border-radius: 5px;    
     display: grid;
-    grid-template-columns: repeat(4, 1fr);    
+    grid-template-columns: repeat(4, 1fr);        
 }
 .card{
-    background-color: #582f46;
-    border: 2px solid  #ca5997;
-    border-radius: 5px;
-    margin: 0.4rem;
+    background-color: #FDA65D;
+    border: 1px solid  #E26A2C;
+    border-radius: 5px;    
     box-shadow: 5px 5px 8px #525252;
     width: 80px;
     height: 80px;
@@ -60,7 +63,7 @@ body{
     align-items: center;    
     transition: 0.2s ease-out;
 }
-.clickeable{
+.clickeable{    
     cursor: pointer;
     transition: 0.2s ease-out;
 }
@@ -69,16 +72,48 @@ body{
 }
 
 .cardImg{
-    width: auto;
-    height: 80px;
+    width: 90%;
+    height: unset;
+    object-fit: contain;
+    object-position: center;
 }
 
-@media (min-width: 800px) {
+.btn-restart{
+    position: fixed;
+    top: 12px ;
+    right: 20px;
+    z-index: 13;
+    opacity: 1;
+    padding: 0.2rem 0.6rem;
+    border-radius: 5px;
+    border: 0;
+    
+    font-size: 14px;
+    background-color: #EED7CE;
+    color: #E26A2C;
+    border: 2px solid  #E26A2C;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.4s ease-out;
+}
+.btn-restart-hide{
+    opacity: 0;
+    transition: 0.4s ease-out;
+}
+.btn-restart:hover{
+    transform: scale(1.2) rotate(4deg);    
+    transition: 0.2s ease-out;
+}
+
+@media (min-width: 700px) {
     .game-board{
         grid-template-columns: repeat(5, 1fr);
+        padding: 0.4rem;
+        width: auto;
+        height: auto;
     }
     .card{
-        margin: 0.8rem;
+        margin: 0.4rem;
         width: 120px;
         height: 120px;
     }
@@ -92,7 +127,14 @@ body{
     .header-stats{
         font-size: 22px;        
     }
+    .btn-restart{
+        font-size: 20px;
+        padding: 0.1rem 0.8rem ;
+        top : 8px;
+        right: 100px;       
+    }
 }
+
 
 
 .flip-out {     
@@ -128,31 +170,7 @@ body{
     transition: 0.4 ease-out;
 }
 
-.btn-restart{
-    position: fixed;
-    top: 12px ;
-    right: 10vw;
-    z-index: 13;
-    opacity: 1;
-    padding: 0.2rem 0.6rem;
-    border-radius: 5px;
-    border: 0;
-    box-shadow: 4px 4px 20px rgb(48, 48, 48);
-    font-size: 14px;
-    background-color: #EED7CE;
-    color: #582f46;
-    border: 2px solid  #ca5997;
-    cursor: pointer;
-    transition: 0.4s ease-out;
-}
-.btn-restart-hide{
-    opacity: 0;
-    transition: 0.4s ease-out;
-}
-.btn-restar:hover{
-    transform: scale(1.2) rotate(4deg);    
-    transition: 0.2s ease-out;
-}
+
 
 /*to show this, set left to 0px*/
 .modal{
@@ -183,8 +201,9 @@ body{
 }
 .modal-paragraph, .modal-title, .modal-btn{
     color: white;    
-    margin: 0.5rem;
-    font-size: 22px;
+    margin: .5rem ;
+    padding: 0 1.8rem;
+    font-size: 18px;
 }
 
 .modal-btn{

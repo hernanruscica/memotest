@@ -1,9 +1,15 @@
 
 /*******************************SETUP OF THE GAME**************************************************************/
-const cardsQuantity = 20, maxLifes = 10, timeShowing = 8000, timeIntro = 2000, defaultQuery = 'cats';
-let lifes, score, query;
+const CARDS_QUANTITY = 20, 
+LIFES_QUANTITY = 10, 
+timeShowing = 8000, 
+timeIntro = 3000,
+LANG_ESP = 0, LANG_ENG = 1;
+
+let lifes = null, score = null, language = LANG_ENG;
 const imgBack = './imgs/tile.jpg';
-let imagesArr;
+const imagesArr2 = ['./imgs/card01.svg', './imgs/card02.svg', './imgs/card03.svg', './imgs/card04.svg', './imgs/card05.svg',
+'./imgs/card06.svg', './imgs/card07.svg', './imgs/card08.svg', './imgs/card09.svg', './imgs/card10.svg'];                   
 /*******************************SETUP OF THE GAME**************************************************************/
 
 
@@ -12,29 +18,47 @@ const $d = document;
 const $gameBoard = $d.querySelector('.game-board');
 let $cards = ''; /*defined in fillGameBoard() */
 const $gameStats = $d.querySelector('.header-stats');
-
 const $h3Lifes = $d.querySelector('.stats-lifes');
 const $h3Score = $d.querySelector('.stats-score');
 const $timer = $d.querySelector('.timer');
-
 const $messagesModal = $d.querySelector('.modal');
-
-
 /*******************************HTML ELEMENTS**************************************************************/
+
+/*******************************TEXTS IN DIFERENTES LANGUAGES**************************************************/
+const welcomeMessages = [
+                        'Bienvenido a MEMOTEST',
+                        'Welcome to MEMOTEST'                        
+                        ];
+const  winnerMessageTitle = ['Ganaste!', 'You Win!']
+const winnerMessages = [
+                        'Felicitaciones! Encontraste todos los pares ! :)<br>',
+                        'Congratulations! You have found all the pairs ! :).<br>',                        
+                        ];
+const  losserMessageTitle = ['Perdiste!', 'You Lose!']
+const losserMessages = [
+                        'No te quedan vidas, perdiste ... :(<br>',
+                        'No more lives, you lost ... :(<br>',                        
+                        ];
+const tryAgainMessage = ['Podés probar de nuevo, dándole al botón de "reintentar" que esta arriba!',
+                        'You can try it again, clicking in the "retry" button!'];
+const hubLifesText = ['Vidas', 'Lifes'];
+const hubScoreText = ['Puntos', 'Score'];
+const hubStartingText = ['Comenzando en ...', 'Starting in ...'];
+const hubRestartText = ['Reintentar', 'Retry']
+/*******************************TEXTS IN DIFERENTES LANGUAGES**************************************************/
 
 
 /*once the document is fully loaded, Do something*/
 $d.addEventListener('DOMContentLoaded', () => {
-    console.log('fully loaded');      
-    /*console.log($gameBoard, $gameStats, $messagesModal); */
-    console.log('intro');
-    $gameBoard.innerHTML = '';
-    
-    showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);
+    $gameBoard.innerHTML = '';    
+    showHideMessages($messagesModal, 'MEMOTEST', welcomeMessages[language] , false);
     setTimeout(() => {        
-        showHideMessages($messagesModal, 'Bienvenido a MemoTest', 'Recuerde las parejas de imagenes, para ganar puntos!', false);        
+        showHideMessages($messagesModal, 'MEMOTEST', welcomeMessages[language], false);        
     }, timeIntro);
-    setTimeout(() => {resetGame()}, timeIntro + 600);
+    setTimeout(() => {
+                        resetGame();
+                        gamePlay();
+                        }, timeIntro + 600);
 });
 
 
@@ -52,66 +76,40 @@ function fillWithRandomNums(quantity, min, max){
     return arr;
 }
 
-/*returns an array with random images from API pixabay, with a query string, a min a max index, and the quantity of images needed (https://pixabay.com/api/docs)*/
-async function fillWithImgs(query, quantity, min, max){
-    const apiKey = '24469039-f2a18081cb188fd1a6f5434af';
-    const arr = [];
-    max = (quantity <= max) ? max : quantity;
-    const randomNumsImgs = fillWithRandomNums(quantity, min, max);
-
-    const response = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${query}&image_type=photo&per_page=${max - min}`);
-    const data = await response.json();    
-
-    randomNumsImgs.forEach((elem) => {        
-        arr.push(data['hits'][elem]['previewURL'])
-    });
-    return arr;
-}
-
 function resetGame(){    
     /*reset this globals variables */
-    lifes = maxLifes, score = 0, query = defaultQuery;
-    /*Once the async function returns the array of images*/
-    fillWithImgs(query, cardsQuantity/2, 0, cardsQuantity*2).then((images) => {
-        
-        imagesArr = images; 
-        /*console.log(imagesArr);*/              
-        fillGameBoard($gameBoard, cardsQuantity, imagesArr, imgBack);
-        $cards = $d.getElementsByClassName('card');
-        gamePlay();
-    }); 
+    lifes = LIFES_QUANTITY, score = 0;
+    fillGameBoard($gameBoard, CARDS_QUANTITY, imagesArr2, imgBack);
+    $cards = $d.getElementsByClassName('card');
+    //gamePlay();    
 }
 
 function gamePlay(){
     
-    showStats();
-    
+    showStats();    
     let currentCardId = '', lastCardId = '', currentCardIdPair = '', lastCardIdPair = '';    
-    let clicksCounter = 0;    
-    console.clear();
+    let clicksCounter = 0;        
 
-    for (let i = 0; i < cardsQuantity; i++){
-        $d.getElementById(i).classList.remove('clickeable');
+    for (let i = 0; i < CARDS_QUANTITY; i++){
+        ($d.getElementById(i)) ? $d.getElementById(i).classList.remove('clickeable') : null;
     }
     
     let j = timeShowing/1000 - 1;
     let startCountDown = setInterval(countDown, 1000);  
 
     function countDown(){
-        $timer.innerHTML = `Comenzando en ${j}`;
+        $timer.innerHTML = `${hubStartingText[language]} ${j}`;
         j--;
     }    
 
     setTimeout(() => {
-        console.log('hidin all the cards');
+        //console.log('hidin all the cards');
         clearInterval(startCountDown);
+        $d.querySelector('.btn-restart').innerHTML = hubRestartText[language];
         $d.querySelector('.btn-restart').classList.remove('btn-restart-hide');
-        startTimer();
-        /*$d.location.reload(true)
-        para agregar un boton al lado del titulo
-         .btn-restart-hide*/
+        startTimer();       
 
-        for (let i = 0; i < cardsQuantity; i++){
+        for (let i = 0; i < CARDS_QUANTITY; i++){
             rotateCard($gameBoard, i);    
             $d.getElementById(i).classList.add('clickeable');        
         }
@@ -120,42 +118,43 @@ function gamePlay(){
 
     $d.addEventListener('click', (e) => {   
         /*If its is an img and the parent element (card) has the clickeable class*/
-        if (e.target.classList.contains('cardImg') && e.target.parentElement.classList.contains('clickeable')){            
-            /*console.log(e.target.parentElement.id);*/
+        if (e.target.classList.contains('cardImg') && e.target.parentElement.classList.contains('clickeable')){                       
             clicksCounter++;
             lastCardId = (currentCardId !== '') ? currentCardId : e.target.parentElement.id;
             currentCardId = e.target.parentElement.id;
             lastCardIdPair = (currentCardIdPair !== '') ? currentCardIdPair : e.target.parentElement.dataset.idpair;
             currentCardIdPair = e.target.parentElement.dataset.idpair;
-            
-            console.clear();      
+            /*remove the clickable class */
+            $d.getElementById(currentCardId).classList.remove('clickeable');
 
             if (clicksCounter%2 === 0){
                 
                 /*There is coincidence in one turn */
                 if (currentCardId !== lastCardId && currentCardIdPair === lastCardIdPair){                                        
-                    if (score < cardsQuantity/2){
-                        console.log('sumaste 1 punto!');                       
-                        /*remove the clickable class */      
-                        $d.getElementById(currentCardId).classList.remove('clickeable');                  
-                        $d.getElementById(lastCardId).classList.remove('clickeable');   
+                    if (score < CARDS_QUANTITY/2){
+                        //console.log('sumaste 1 punto!');   
+                        $d.getElementById(lastCardId).classList.remove('clickeable');  
                         $d.getElementById('protection').classList.add('protectFromClicksGreen'); 
+                        
                         setTimeout(() => {$d.getElementById('protection').classList.remove('protectFromClicksGreen')}, 500 );
                         score++;
                         showStats(); 
-                        if (score === cardsQuantity/2){
-                            console.log('You Win !');
+                        if (score === CARDS_QUANTITY/2){
+                            //console.log('You Win !');
                             stopTimer();
-                            $d.getElementById('protection').classList.add('protectFromClicksGreen');
-                            showHideMessages($messagesModal, 'You Win', 'Completaste el tablero, podes intentar de nuevo en un nuevo tablero!', true);
+                            $d.getElementById('protection').classList.add('protectFromClicksGreen');                            
+                            showHideMessages($messagesModal, winnerMessageTitle[language], winnerMessages[language] + tryAgainMessage[language], false);                            
                         }
                     }                       
                 
                 /*There ISNT coincidence in one turn */
                 }else{                    
                     if (lifes > 0){
-                        console.log('perdiste 1 vida!');
+                        //console.log('perdiste 1 vida!');
                         $d.getElementById('protection').classList.add('protectFromClicks');   
+                        /*add the clickable class */
+                        $d.getElementById(currentCardId).classList.add('clickeable');
+                        $d.getElementById(lastCardId).classList.add('clickeable'); 
                         lifes = lifes - 1;                                            
                         setTimeout(() => {
                             rotateCard($gameBoard, currentCardId, currentCardIdPair);
@@ -164,24 +163,28 @@ function gamePlay(){
                         }, 1000);                        
                         showStats();
                         if (lifes === 0){
-                            console.log('Game Over !');
+                            //console.log('Game Over !');
                             stopTimer();
-                            $d.getElementById('protection').classList.add('protectFromClicks');
-                            showHideMessages($messagesModal, 'Game Over', 'No tenes mas vidas, podes intentar de nuevo en un nuevo tablero!', true);
+                            $d.getElementById('protection').classList.add('protectFromClicks');                            
+                            showHideMessages($messagesModal,  losserMessageTitle[language], losserMessages[language] + tryAgainMessage[language], false);                            
                         }
 
                     }                                         
                 }
             }
-            
+            /*
             console.log(`Last Card Id: ${lastCardId} - Last Card Id Pair: ${lastCardIdPair}
                     \nCurrent Card Id: ${currentCardId} - Current Card Id Pair: ${currentCardIdPair}\n
                     clickCounter: ${clicksCounter}\nlifes: ${lifes}\n`); 
-                
+                */
             rotateCard($gameBoard, currentCardId, currentCardIdPair);
             
             
         }    
+        if (e.target.id == 'btn-restart'){
+            //console.log("restarting");
+            $d.location.reload(true);
+        }
     });    
     
 }
@@ -232,7 +235,7 @@ function rotateCard($gBoard, cardId, cardIdPair){
         /*console.log('backImg');*/
         $card.classList.add('flip-out');
         setTimeout(() => {
-            $img.setAttribute('src', imagesArr[cardIdPair]);
+            $img.setAttribute('src', imagesArr2[cardIdPair]);
             $card.classList.remove('flip-out');                        
         }, 200);
     }
@@ -249,9 +252,9 @@ function rotateCard($gBoard, cardId, cardIdPair){
 
 function showStats(){
     $h3Lifes.innerHTML = '';   
-    $h3Lifes.innerHTML = `Lifes: ${lifes}`;
+    $h3Lifes.innerHTML = `${hubLifesText[language]}: ${lifes}`;
     $h3Score.innerHTML = '';
-    $h3Score.innerHTML = `Score: ${score}`;                     
+    $h3Score.innerHTML = `${hubScoreText[language]}: ${score}`;                     
 }
 
 ///////////////////* HASTA ACA REFACTORIZADO *////////////////////////////
@@ -351,8 +354,6 @@ function resetTimer() {
     sec = 0;
     min = 0;
 }
-
-
 
 
 
