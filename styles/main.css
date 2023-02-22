@@ -8,7 +8,7 @@
 }
 body{    
     font-family: 'Source Sans Pro', sans-serif;
-    background-color: #EED7CE;
+    background-color: #EED7CE;    
 }
 .app{
     height: 100%;
@@ -41,6 +41,12 @@ body{
     font-size: 1em;
     color: brown;   
 }
+
+.game-controls{
+    padding: 1rem;
+}
+
+
 
 .game-board{
     margin: 2rem auto;    

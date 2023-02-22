@@ -8,24 +8,32 @@
     <link rel="stylesheet" href="./styles/main.css">
 </head>
 <body>
-    <div id ='protection' ></div>
-    
+    <div id ='protection' ></div>    
     <button class ='btn-restart btn-restart-hide'  id = "btn-restart"></button>
     <div id ='messages ' class="modal hide">
-        <h3 class="modal-title"></h3>
+        <h3 class="modal-title"></h3>        
         <p class="modal-paragraph"></p>        
     </div>
     <div class="app">
         <div class="header">
-            <h1 class='header-title'>Javascript <span style = 'font-style: italic; color: brown'>MemoTest</span></span></h1>             
+            <h1 class='header-title'>Javascript <span style = 'font-style: italic; color: brown'>MemoTest</span></span></h1>  
             <div class="header-stats">   
                 <h3 class='stats-lifes'></h3>             
                 <h3 class='stats-score'></h3>             
                 <h3 class='timer'></h3>  
             </div>                        
         </div>
+        <div class="game-controls">
+            <label for="lang" id="language-lbl">Language</label>
+            <select name="lang" id="lang">
+                <option value="0">ESP</option>
+                <option value="1">ENG</option>
+            </select>  
+            
+        </div>
         <div class="game-board">                    
         </div>
+        
     </div>
     <script src="./js/main.js"></script>
 </body>

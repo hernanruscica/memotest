@@ -185,6 +185,10 @@ function gamePlay(){
             //console.log("restarting");
             $d.location.reload(true);
         }
+        if (e.target.id == 'lang'){            
+           language = parseInt(e.target.value);
+           //console.log("click en el idioma", language);
+        }
     });    
     
 }
