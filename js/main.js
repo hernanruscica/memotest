@@ -55,11 +55,16 @@ $d.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {        
         showHideMessages($messagesModal, 'MEMOTEST', welcomeMessages[language], false);        
     }, timeIntro);
+    startGame();
+}
+);
+
+function startGame () {
     setTimeout(() => {
-                        resetGame();
-                        gamePlay();
-                        }, timeIntro + 600);
-});
+        resetGame();
+        gamePlay();
+        }, timeIntro + 600);
+}
 
 
 /*generates an array fill with random numbers, no repetitives from min to max (inclusives)*/
@@ -79,12 +84,12 @@ function fillWithRandomNums(quantity, min, max){
 function resetGame(){    
     /*reset this globals variables */
     lifes = LIFES_QUANTITY, score = 0;
+    stopTimer();
     fillGameBoard($gameBoard, CARDS_QUANTITY, imagesArr2, imgBack);
-    $cards = $d.getElementsByClassName('card');
-    //gamePlay();    
+    $cards = $d.getElementsByClassName('card');     
 }
 
-function gamePlay(){
+function gamePlay(){    
     
     showStats();    
     let currentCardId = '', lastCardId = '', currentCardIdPair = '', lastCardIdPair = '';    
@@ -182,14 +187,19 @@ function gamePlay(){
             
         }    
         if (e.target.id == 'btn-restart'){
-            //console.log("restarting");
+            console.log("restarting");
             $d.location.reload(true);
-        }
+            //startGame();
+        }        
+    });  
+    $d.addEventListener('change', (e) => {
         if (e.target.id == 'lang'){            
-           language = parseInt(e.target.value);
-           //console.log("click en el idioma", language);
-        }
-    });    
+            language = parseInt(e.target.value);
+            console.log("click en el idioma", language);
+            //$d.location.reload(true);
+            showStats();
+         }
+    })  
     
 }
 
@@ -258,7 +268,8 @@ function showStats(){
     $h3Lifes.innerHTML = '';   
     $h3Lifes.innerHTML = `${hubLifesText[language]}: ${lifes}`;
     $h3Score.innerHTML = '';
-    $h3Score.innerHTML = `${hubScoreText[language]}: ${score}`;                     
+    $h3Score.innerHTML = `${hubScoreText[language]}: ${score}`;    
+    $d.querySelector('.btn-restart').innerHTML = hubRestartText[language];                 
 }
 
 ///////////////////* HASTA ACA REFACTORIZADO *////////////////////////////
