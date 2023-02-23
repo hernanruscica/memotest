@@ -26,8 +26,8 @@ const $messagesModal = $d.querySelector('.modal');
 
 /*******************************TEXTS IN DIFERENTES LANGUAGES**************************************************/
 const welcomeMessages = [
-                        'Bienvenido a MEMOTEST. The goal is to match all the pair cards.',
-                        'Welcome to MEMOTEST. El objetivo del juego es encontrar todos los pares de cartas.'                        
+                        'Bienvenido a MEMOTEST. El objetivo del juego es encontrar todos los pares de cartas.',
+                        'Welcome to MEMOTEST. The goal is to match all the pair cards. '                        
                         ];
 const  winnerMessageTitle = ['Ganaste!', 'You Win!']
 const winnerMessages = [
